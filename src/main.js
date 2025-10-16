@@ -4,6 +4,88 @@
  * 版本：1.0.0
  */
 
+// 当前脚本版本
+const CURRENT_VERSION = '1.0.0';
+// 更新检查间隔（毫秒）
+const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
+
+/**
+ * 检查脚本更新
+ */
+async function checkForUpdates(showNoUpdateMessage = false) {
+  try {
+    // 从GitHub获取最新版本的脚本
+    const updateUrl = 'https://github.com/SutChan/douyin_tool/raw/main/dist/douyin_ui_customizer.user.js';
+    
+    GM_xmlhttpRequest({
+      method: 'GET',
+      url: updateUrl,
+      onload: function(response) {
+        if (response.status === 200) {
+          // 从脚本头部提取版本号
+          const scriptContent = response.responseText;
+          const versionMatch = scriptContent.match(/@version\s+(\d+\.\d+\.\d+)/i);
+          
+          if (versionMatch && versionMatch[1]) {
+            const latestVersion = versionMatch[1];
+            
+            // 比较版本号
+            if (isNewerVersion(latestVersion, CURRENT_VERSION)) {
+              if (confirm(`发现新版本 ${latestVersion}！是否更新脚本？\n\n当前版本：${CURRENT_VERSION}`)) {
+                // 打开更新链接
+                window.open(updateUrl, '_blank');
+              }
+            } else if (showNoUpdateMessage) {
+              alert('您的脚本已是最新版本！');
+            }
+          }
+        }
+      },
+      onerror: function() {
+        if (showNoUpdateMessage) {
+          alert('检查更新失败，请稍后重试。');
+        }
+      }
+    });
+  } catch (error) {
+    console.error('检查更新时发生错误：', error);
+  }
+}
+
+/**
+ * 比较版本号
+ * @param {string} newVersion - 新版本号
+ * @param {string} currentVersion - 当前版本号
+ * @returns {boolean} 是否是新版本
+ */
+function isNewerVersion(newVersion, currentVersion) {
+  const newParts = newVersion.split('.').map(Number);
+  const currentParts = currentVersion.split('.').map(Number);
+  
+  for (let i = 0; i < newParts.length; i++) {
+    if (newParts[i] > currentParts[i]) return true;
+    if (newParts[i] < currentParts[i]) return false;
+  }
+  
+  return false;
+}
+
+/**
+ * 检查是否需要进行自动更新检查
+ */
+function shouldCheckForUpdates() {
+  const lastCheckTime = getItem('lastUpdateCheckTime', 0);
+  const now = Date.now();
+  
+  // 如果距离上次检查超过了设定的间隔时间
+  if (now - lastCheckTime > UPDATE_CHECK_INTERVAL) {
+    setItem('lastUpdateCheckTime', now);
+    return true;
+  }
+  
+  return false;
+}
+
 // 初始化函数
 function init() {
   console.log('抖音UI定制工具已启动');
@@ -22,6 +104,11 @@ function init() {
   
   // 注册油猴菜单命令
   registerMenuCommands(uiManager);
+  
+  // 自动检查更新（如果需要）
+  if (shouldCheckForUpdates()) {
+    setTimeout(() => checkForUpdates(false), 3000);
+  }
 }
 
 /**
@@ -186,6 +273,11 @@ function registerMenuCommands(uiManager) {
     config.theme = config.theme === 'dark' ? 'light' : 'dark';
     saveConfig(config);
     injectStyles(config.theme);
+  });
+  
+  // 检查更新
+  GM_registerMenuCommand('检查更新', () => {
+    checkForUpdates(true);
   });
   
   // 重置设置
