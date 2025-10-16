@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.6
+// @version      1.0.13
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -2440,11 +2440,11 @@ class UIManager {
     /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
- * 版本：1.0.5
+ * 版本：1.0.12
  */
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.5';
+const CURRENT_VERSION = '1.0.12';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
@@ -2697,10 +2697,71 @@ function isLivePage() {
 }
 
 /**
+ * 创建浮动设置按钮
+ * @param {UIManager} uiManager - UI管理器实例
+ */
+function createFloatingSettingsButton(uiManager) {
+  // 检查是否已存在浮动按钮，避免重复创建
+  if (document.getElementById('douyin-ui-customizer-float-btn')) {
+    return;
+  }
+
+  // 创建浮动按钮元素
+  const floatButton = document.createElement('div');
+  floatButton.id = 'douyin-ui-customizer-float-btn';
+  floatButton.innerHTML = '⚙️';
+  floatButton.style.cssText = `
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: #000000;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 999998;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+  `;
+
+  // 添加点击事件
+  floatButton.addEventListener('click', () => {
+    uiManager.showSettingsPanel();
+  });
+
+  // 添加悬停效果
+  floatButton.addEventListener('mouseenter', () => {
+    floatButton.style.transform = 'scale(1.1)';
+  });
+  
+  floatButton.addEventListener('mouseleave', () => {
+    floatButton.style.transform = 'scale(1)';
+  });
+
+  // 添加到文档中
+  document.body.appendChild(floatButton);
+
+  // 定期检查按钮是否存在，避免被页面脚本移除
+  setInterval(() => {
+    if (!document.getElementById('douyin-ui-customizer-float-btn')) {
+      createFloatingSettingsButton(uiManager);
+    }
+  }, 5000); // 每5秒检查一次
+}
+
+/**
  * 注册油猴菜单命令
  * @param {UIManager} uiManager - UI管理器实例
  */
 function registerMenuCommands(uiManager) {
+  // 创建浮动设置按钮
+  createFloatingSettingsButton(uiManager);
+  
   // 打开设置面板
   GM_registerMenuCommand('打开设置面板', () => {
     uiManager.showSettingsPanel();
