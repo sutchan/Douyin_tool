@@ -1,11 +1,11 @@
 /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
- * 版本：1.0.12
+ * 版本：1.0.48
  */
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.45';
+const CURRENT_VERSION = '1.0.48';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
