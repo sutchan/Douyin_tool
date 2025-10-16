@@ -694,6 +694,11 @@ class UIManager {
         
         // 显示保存成功提示
         this.showNotification('设置已成功保存并应用！', 'success');
+        
+        // 延迟关闭设置面板
+        setTimeout(() => {
+          panel.remove();
+        }, 300);
       }, 100);
     } catch (error) {
       console.error('保存设置失败:', error);
