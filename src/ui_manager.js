@@ -354,7 +354,10 @@ class UIManager {
           const selector = childCriteria.tagName;
           let found = false;
           
-          parent.querySelectorAll(selector).forEach(child => {
+          // 优化查找逻辑，使用for循环替代forEach以便找到匹配后立即跳出
+          const children = parent.querySelectorAll(selector);
+          for (let i = 0; i < children.length && !found; i++) {
+            const child = children[i];
             // 检查子元素的条件
             let childMatch = true;
             if (childCriteria.text && !child.textContent.includes(childCriteria.text)) {
@@ -371,8 +374,10 @@ class UIManager {
               }
             }
             
-            if (childMatch) found = true;
-          });
+            if (childMatch) {
+              found = true;
+            }
+          }
           
           if (!found) {
             match = false;

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.35
+// @version      1.0.36
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -1183,7 +1183,10 @@ class UIManager {
           const selector = childCriteria.tagName;
           let found = false;
           
-          parent.querySelectorAll(selector).forEach(child => {
+          // 优化查找逻辑，使用for循环替代forEach以便找到匹配后立即跳出
+          const children = parent.querySelectorAll(selector);
+          for (let i = 0; i < children.length && !found; i++) {
+            const child = children[i];
             // 检查子元素的条件
             let childMatch = true;
             if (childCriteria.text && !child.textContent.includes(childCriteria.text)) {
@@ -1200,8 +1203,10 @@ class UIManager {
               }
             }
             
-            if (childMatch) found = true;
-          });
+            if (childMatch) {
+              found = true;
+            }
+          }
           
           if (!found) {
             match = false;
@@ -1849,7 +1854,7 @@ class UIManager {
  */
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.34';
+const CURRENT_VERSION = '1.0.35';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
