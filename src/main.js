@@ -172,6 +172,16 @@ function generateCustomStyles() {
       customCSS += '.author-info { display: none !important; }';
     }
     
+    // 隐藏音乐信息
+    if (!config.videoUI.showMusicInfo) {
+      customCSS += '.music-info, .music-label, .sound-info { display: none !important; }';
+    }
+    
+    // 隐藏视频描述
+    if (!config.videoUI.showDescription) {
+      customCSS += '.video-desc, .description, .video-content { display: none !important; }';
+    }
+    
     // 调整界面元素布局
     if (config.videoUI.layout) {
       // 这里可以根据配置添加相应的布局样式

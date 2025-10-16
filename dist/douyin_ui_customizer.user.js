@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.15
+// @version      1.0.16
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -2609,6 +2609,16 @@ function generateCustomStyles() {
     // 隐藏作者信息
     if (!config.videoUI.showAuthorInfo) {
       customCSS += '.author-info { display: none !important; }';
+    }
+    
+    // 隐藏音乐信息
+    if (!config.videoUI.showMusicInfo) {
+      customCSS += '.music-info, .music-label, .sound-info { display: none !important; }';
+    }
+    
+    // 隐藏视频描述
+    if (!config.videoUI.showDescription) {
+      customCSS += '.video-desc, .description, .video-content { display: none !important; }';
     }
     
     // 调整界面元素布局
