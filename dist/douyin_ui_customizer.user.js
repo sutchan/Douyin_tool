@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.5
+// @version      1.0.6
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -11,6 +11,9 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
+// @grant        GM_xmlhttpRequest
+// @updateURL    https://github.com/SutChan/douyin_tool/raw/main/dist/douyin_ui_customizer.user.js
+// @downloadURL  https://github.com/SutChan/douyin_tool/raw/main/dist/douyin_ui_customizer.user.js
 // @license      MIT
 // ==/UserScript==
 /* eslint-disable */

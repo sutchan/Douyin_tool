@@ -26,6 +26,7 @@ console.log(`版本号已更新至: ${pkg.version}`);
 
 // 生成油猴脚本头部
 function generateUserscriptHeader() {
+  const updateUrl = 'https://github.com/SutChan/douyin_tool/raw/main/dist/douyin_ui_customizer.user.js';
   return `// ==UserScript==
 // @name         ${pkg.name}
 // @namespace    https://github.com/SutChan/douyin_tool
@@ -39,6 +40,9 @@ function generateUserscriptHeader() {
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
+// @grant        GM_xmlhttpRequest
+// @updateURL    ${updateUrl}
+// @downloadURL  ${updateUrl}
 // @license      ${pkg.license}
 // ==/UserScript==
 /* eslint-disable */
