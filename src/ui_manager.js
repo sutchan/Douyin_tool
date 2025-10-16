@@ -554,47 +554,47 @@ class UIManager {
       if (!this.config.general) {
         this.config.general = {};
       }
-      this.config.general.autoPlay = panel.getElementById('autoPlay').checked;
-      this.config.general.autoScroll = panel.getElementById('autoScroll').checked;
-      this.config.general.keyboardShortcuts = panel.getElementById('keyboardShortcuts').checked;
-      this.config.general.notifications = panel.getElementById('notifications').checked;
+      this.config.general.autoPlay = panel.querySelector('#autoPlay').checked;
+      this.config.general.autoScroll = panel.querySelector('#autoScroll').checked;
+      this.config.general.keyboardShortcuts = panel.querySelector('#keyboardShortcuts').checked;
+      this.config.general.notifications = panel.querySelector('#notifications').checked;
       
       // 保存短视频设置
       if (!this.config.videoUI) {
         this.config.videoUI = {};
       }
-      this.config.videoUI.showLikeButton = panel.getElementById('showLikeButton').checked;
-      this.config.videoUI.showCommentButton = panel.getElementById('showCommentButton').checked;
-      this.config.videoUI.showShareButton = panel.getElementById('showShareButton').checked;
-      this.config.videoUI.showAuthorInfo = panel.getElementById('showAuthorInfo').checked;
-      this.config.videoUI.showMusicInfo = panel.getElementById('showMusicInfo').checked;
-      this.config.videoUI.showDescription = panel.getElementById('showDescription').checked;
-      this.config.videoUI.showRecommendations = panel.getElementById('showRecommendations').checked;
+      this.config.videoUI.showLikeButton = panel.querySelector('#showLikeButton').checked;
+      this.config.videoUI.showCommentButton = panel.querySelector('#showCommentButton').checked;
+      this.config.videoUI.showShareButton = panel.querySelector('#showShareButton').checked;
+      this.config.videoUI.showAuthorInfo = panel.querySelector('#showAuthorInfo').checked;
+      this.config.videoUI.showMusicInfo = panel.querySelector('#showMusicInfo').checked;
+      this.config.videoUI.showDescription = panel.querySelector('#showDescription').checked;
+      this.config.videoUI.showRecommendations = panel.querySelector('#showRecommendations').checked;
       
       if (!this.config.videoUI.controlBar) {
         this.config.videoUI.controlBar = {};
       }
-      this.config.videoUI.controlBar.show = panel.getElementById('controlBarShow').checked;
-      this.config.videoUI.controlBar.autoHide = panel.getElementById('controlBarAutoHide').checked;
-      this.config.videoUI.controlBar.position = panel.getElementById('controlBarPosition').value;
+      this.config.videoUI.controlBar.show = panel.querySelector('#controlBarShow').checked;
+      this.config.videoUI.controlBar.autoHide = panel.querySelector('#controlBarAutoHide').checked;
+      this.config.videoUI.controlBar.position = panel.querySelector('#controlBarPosition').value;
       
       // 保存直播间设置
       if (!this.config.liveUI) {
         this.config.liveUI = {};
       }
-      this.config.liveUI.showGifts = panel.getElementById('showGifts').checked;
-      this.config.liveUI.showDanmaku = panel.getElementById('showDanmaku').checked;
-      this.config.liveUI.showRecommendations = panel.getElementById('showRecommendations').checked;
-      this.config.liveUI.showAds = panel.getElementById('showAds').checked;
-      this.config.liveUI.showStats = panel.getElementById('showStats').checked;
+      this.config.liveUI.showGifts = panel.querySelector('#showGifts').checked;
+      this.config.liveUI.showDanmaku = panel.querySelector('#showDanmaku').checked;
+      this.config.liveUI.showRecommendations = panel.querySelector('#showRecommendations').checked;
+      this.config.liveUI.showAds = panel.querySelector('#showAds').checked;
+      this.config.liveUI.showStats = panel.querySelector('#showStats').checked;
       
       if (!this.config.liveUI.danmaku) {
         this.config.liveUI.danmaku = {};
       }
-      this.config.liveUI.danmaku.fontSize = parseInt(panel.getElementById('danmakuFontSize').value);
-      this.config.liveUI.danmaku.color = panel.getElementById('danmakuColor').value;
-      this.config.liveUI.danmaku.opacity = parseFloat(panel.getElementById('danmakuOpacity').value);
-      this.config.liveUI.danmaku.speed = panel.getElementById('danmakuSpeed').value;
+      this.config.liveUI.danmaku.fontSize = parseInt(panel.querySelector('#danmakuFontSize').value);
+      this.config.liveUI.danmaku.color = panel.querySelector('#danmakuColor').value;
+      this.config.liveUI.danmaku.opacity = parseFloat(panel.querySelector('#danmakuOpacity').value);
+      this.config.liveUI.danmaku.speed = panel.querySelector('#danmakuSpeed').value;
       
       // 保存配置
       saveConfig(this.config);
