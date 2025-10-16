@@ -59,23 +59,12 @@ function readFile(filePath) {
   }
 }
 
-// 简化的代码处理函数，暂时禁用压缩以确保构建稳定性
+// 简化的代码处理函数，直接返回代码而不进行复杂处理
 async function compressJS(jsCode) {
   try {
-    // 暂时不使用terser进行压缩，只进行基本的代码处理
-    // 移除注释和多余空白
-    let processedCode = jsCode
-      // 移除单行注释
-      .replace(/\/\/.*$/gm, '')
-      // 移除多行注释
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      // 移除多余的空白字符
-      .replace(/\s+/g, ' ')
-      // 移除行尾的空白
-      .replace(/\s*$/gm, '');
-    
-    console.log('代码预处理完成，跳过压缩以避免语法错误');
-    return processedCode;
+    // 最小化处理，避免引入语法错误
+    console.log('直接使用原始代码结构，避免处理过程中引入语法错误');
+    return jsCode;
   } catch (error) {
     console.error('代码处理错误:', error);
     console.log('返回原始代码');
@@ -98,32 +87,46 @@ async function build() {
   const defaultCSS = readFile(path.join(__dirname, 'src', 'styles', 'default.css'));
   const darkCSS = readFile(path.join(__dirname, 'src', 'styles', 'dark.css'));
   
-  // 合并JS代码
-  let combinedJS = `
+  // 使用直接字符串拼接方式合并JS代码，避免模板字符串可能引入的语法问题
+  let combinedJS = 
     // CSS样式
-    const defaultStyles = \`${defaultCSS.replace(/`/g, '\\`')}\`;
-    const darkStyles = \`${darkCSS.replace(/`/g, '\\`')}\`;
+    "// CSS样式\n" +
+    "const defaultStyles = " + JSON.stringify(defaultCSS) + ";\n" +
+    "const darkStyles = " + JSON.stringify(darkCSS) + ";\n\n" +
     
     // 工具函数和基础模块
-    ${domUtilsJS}
-    ${storageUtilsJS}
-    ${configJS}
+    domUtilsJS + "\n\n" +
     
-    // 定义页面检测函数（提取自main.js，确保在UIManager前可用）
-    function isVideoPage() {
-      return location.pathname.includes('/video/') || 
-             location.pathname === '/' || 
-             location.pathname.includes('/user/');
-    }
+    // 存储工具
+    storageUtilsJS + "\n\n" +
     
-    function isLivePage() {
-      return location.pathname.includes('/live/');
-    }
+    // 配置管理
+    configJS + "\n\n" +
     
-    // 加载UI管理器和主脚本
-    ${uiManagerJS}
-    ${mainJS}
-  `;
+    // 定义页面检测函数
+    "// 定义页面检测函数\n" +
+    "function isVideoPage() {\n" +
+    "  return location.pathname.includes('/video/') || \n" +
+    "         location.pathname === '/' || \n" +
+    "         location.pathname.includes('/user/');\n" +
+    "}\n\n" +
+    
+    "function isLivePage() {\n" +
+    "  return location.pathname.includes('/live/');\n" +
+    "}\n\n" +
+    
+    // 加载UI管理器
+    uiManagerJS + "\n\n" +
+    
+    // 主脚本逻辑
+    mainJS;
+  
+  // 移除可能的多余分号和语法问题
+  combinedJS = combinedJS
+    .replace(/;;+/g, ';')  // 移除多余的分号
+    .replace(/\{\s*\}/g, '{}')  // 清理空对象/函数
+    .replace(/^\s*$/gm, '')  // 移除空行
+    .trim();
   
   // 压缩JS
   const compressedJS = await compressJS(combinedJS);
