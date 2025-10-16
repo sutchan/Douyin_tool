@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.24
+// @version      1.0.25
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -19,10 +19,11 @@
 /* eslint-disable */
 // @ts-nocheck
 
-// CSS样式
+// CSS样式定义
 const defaultStyles = "/**\n * 抖音UI定制工具 - 默认样式\n */\n\n/* 设置面板样式 */\n.douyin-ui-customizer-panel {\n  position: fixed;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  width: 90%;\n  max-width: 800px;\n  max-height: 90vh;\n  background: #ffffff;\n  border-radius: 12px;\n  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);\n  z-index: 999999;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n}\n\n.douyin-ui-customizer-panel .panel-header {\n  padding: 20px;\n  background: #000000;\n  color: #ffffff;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  border-bottom: 1px solid #e0e0e0;\n}\n\n.douyin-ui-customizer-panel .panel-header h2 {\n  margin: 0;\n  font-size: 20px;\n  font-weight: 600;\n}\n\n.douyin-ui-customizer-panel .close-btn {\n  background: none;\n  border: none;\n  color: #ffffff;\n  font-size: 28px;\n  cursor: pointer;\n  padding: 0;\n  width: 30px;\n  height: 30px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 50%;\n  transition: background-color 0.2s;\n}\n\n.douyin-ui-customizer-panel .close-btn:hover {\n  background-color: rgba(255, 255, 255, 0.1);\n}\n\n.douyin-ui-customizer-panel .panel-content {\n  flex: 1;\n  padding: 20px;\n  overflow-y: auto;\n}\n\n.douyin-ui-customizer-panel .settings-tabs {\n  display: flex;\n  gap: 10px;\n  margin-bottom: 20px;\n  border-bottom: 1px solid #e0e0e0;\n  padding-bottom: 10px;\n}\n\n.douyin-ui-customizer-panel .tab-btn {\n  background: #f5f5f5;\n  border: 1px solid #e0e0e0;\n  padding: 8px 16px;\n  border-radius: 6px;\n  cursor: pointer;\n  transition: all 0.2s;\n  font-size: 14px;\n  font-weight: 500;\n}\n\n.douyin-ui-customizer-panel .tab-btn:hover {\n  background: #e8e8e8;\n}\n\n.douyin-ui-customizer-panel .tab-btn.active {\n  background: #000000;\n  color: #ffffff;\n  border-color: #000000;\n}\n\n.douyin-ui-customizer-panel .tab-content {\n  display: none;\n}\n\n.douyin-ui-customizer-panel .tab-content.active {\n  display: block;\n}\n\n.douyin-ui-customizer-panel .setting-group {\n  margin-bottom: 25px;\n  padding: 15px;\n  background: #fafafa;\n  border-radius: 8px;\n}\n\n.douyin-ui-customizer-panel .setting-group h3 {\n  margin-top: 0;\n  margin-bottom: 15px;\n  font-size: 16px;\n  font-weight: 600;\n  color: #333333;\n}\n\n.douyin-ui-customizer-panel label {\n  display: flex;\n  align-items: center;\n  margin-bottom: 10px;\n  cursor: pointer;\n  font-size: 14px;\n  color: #555555;\n  transition: color 0.2s;\n}\n\n.douyin-ui-customizer-panel label:hover {\n  color: #000000;\n}\n\n.douyin-ui-customizer-panel input[type=\"checkbox\"],\n.douyin-ui-customizer-panel input[type=\"radio\"] {\n  margin-right: 8px;\n  width: 16px;\n  height: 16px;\n}\n\n.douyin-ui-customizer-panel input[type=\"number\"],\n.douyin-ui-customizer-panel input[type=\"text\"],\n.douyin-ui-customizer-panel select {\n  margin-left: 8px;\n  padding: 6px 10px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  font-size: 14px;\n}\n\n.douyin-ui-customizer-panel input[type=\"range\"] {\n  margin-left: 8px;\n  margin-right: 8px;\n  flex: 1;\n}\n\n.douyin-ui-customizer-panel input[type=\"color\"] {\n  margin-left: 8px;\n  width: 40px;\n  height: 30px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  cursor: pointer;\n}\n\n.douyin-ui-customizer-panel .panel-footer {\n  padding: 20px;\n  background: #f8f8f8;\n  border-top: 1px solid #e0e0e0;\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n}\n\n.douyin-ui-customizer-panel .save-btn,\n.douyin-ui-customizer-panel .reset-btn {\n  padding: 10px 20px;\n  border: none;\n  border-radius: 6px;\n  font-size: 14px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n\n.douyin-ui-customizer-panel .save-btn {\n  background: #000000;\n  color: #ffffff;\n}\n\n.douyin-ui-customizer-panel .save-btn:hover {\n  background: #333333;\n}\n\n.douyin-ui-customizer-panel .reset-btn {\n  background: #ffffff;\n  color: #666666;\n  border: 1px solid #ddd;\n}\n\n.douyin-ui-customizer-panel .reset-btn:hover {\n  background: #f0f0f0;\n  color: #333333;\n}\n\n.douyin-ui-customizer-panel button#exportBtn,\n.douyin-ui-customizer-panel button#importBtn {\n  padding: 8px 16px;\n  background: #000000;\n  color: #ffffff;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  font-size: 14px;\n  margin-bottom: 10px;\n  transition: background-color 0.2s;\n}\n\n.douyin-ui-customizer-panel button#exportBtn:hover,\n.douyin-ui-customizer-panel button#importBtn:hover {\n  background: #333333;\n}\n\n.douyin-ui-customizer-panel input[type=\"file\"] {\n  margin-bottom: 10px;\n  padding: 8px;\n  border: 1px solid #ddd;\n  border-radius: 4px;\n  font-size: 14px;\n}\n\n.douyin-ui-customizer-panel p {\n  font-size: 13px;\n  color: #777777;\n  margin-top: 5px;\n  line-height: 1.5;\n}\n\n/* 工具提示样式 */\n.douyin-ui-customizer-tooltip {\n  position: absolute;\n  background: rgba(0, 0, 0, 0.9);\n  color: #ffffff;\n  padding: 8px 12px;\n  border-radius: 4px;\n  font-size: 12px;\n  pointer-events: none;\n  z-index: 999999;\n  white-space: nowrap;\n}\n\n/* 滚动条样式 */\n.douyin-ui-customizer-panel ::-webkit-scrollbar {\n  width: 8px;\n  height: 8px;\n}\n\n.douyin-ui-customizer-panel ::-webkit-scrollbar-track {\n  background: #f1f1f1;\n  border-radius: 4px;\n}\n\n.douyin-ui-customizer-panel ::-webkit-scrollbar-thumb {\n  background: #888;\n  border-radius: 4px;\n}\n\n.douyin-ui-customizer-panel ::-webkit-scrollbar-thumb:hover {\n  background: #555;\n}\n\n/* 响应式设计 */\n@media (max-width: 600px) {\n  .douyin-ui-customizer-panel {\n    width: 95%;\n    max-width: none;\n    margin: 10px;\n    top: 10px;\n    left: 10px;\n    transform: none;\n    max-height: calc(100vh - 20px);\n  }\n  \n  .douyin-ui-customizer-panel .settings-tabs {\n    flex-wrap: wrap;\n  }\n  \n  .douyin-ui-customizer-panel .panel-footer {\n    flex-direction: column;\n  }\n  \n  .douyin-ui-customizer-panel .save-btn,\n  .douyin-ui-customizer-panel .reset-btn {\n    width: 100%;\n  }\n}";
 const darkStyles = "/**\n * 抖音UI定制工具 - 暗黑模式样式\n */\n\n/* 设置面板样式 */\n.douyin-ui-customizer-panel {\n  position: fixed;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  width: 90%;\n  max-width: 800px;\n  max-height: 90vh;\n  background: #1a1a1a;\n  border-radius: 12px;\n  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);\n  z-index: 999999;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n}\n\n.douyin-ui-customizer-panel .panel-header {\n  padding: 20px;\n  background: #2d2d2d;\n  color: #ffffff;\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  border-bottom: 1px solid #3d3d3d;\n}\n\n.douyin-ui-customizer-panel .panel-header h2 {\n  margin: 0;\n  font-size: 20px;\n  font-weight: 600;\n}\n\n.douyin-ui-customizer-panel .close-btn {\n  background: none;\n  border: none;\n  color: #ffffff;\n  font-size: 28px;\n  cursor: pointer;\n  padding: 0;\n  width: 30px;\n  height: 30px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 50%;\n  transition: background-color 0.2s;\n}\n\n.douyin-ui-customizer-panel .close-btn:hover {\n  background-color: rgba(255, 255, 255, 0.1);\n}\n\n.douyin-ui-customizer-panel .panel-content {\n  flex: 1;\n  padding: 20px;\n  overflow-y: auto;\n}\n\n.douyin-ui-customizer-panel .settings-tabs {\n  display: flex;\n  gap: 10px;\n  margin-bottom: 20px;\n  border-bottom: 1px solid #3d3d3d;\n  padding-bottom: 10px;\n}\n\n.douyin-ui-customizer-panel .tab-btn {\n  background: #2d2d2d;\n  border: 1px solid #3d3d3d;\n  padding: 8px 16px;\n  border-radius: 6px;\n  cursor: pointer;\n  transition: all 0.2s;\n  font-size: 14px;\n  font-weight: 500;\n  color: #cccccc;\n}\n\n.douyin-ui-customizer-panel .tab-btn:hover {\n  background: #3d3d3d;\n  color: #ffffff;\n}\n\n.douyin-ui-customizer-panel .tab-btn.active {\n  background: #ffffff;\n  color: #1a1a1a;\n  border-color: #ffffff;\n}\n\n.douyin-ui-customizer-panel .tab-content {\n  display: none;\n}\n\n.douyin-ui-customizer-panel .tab-content.active {\n  display: block;\n}\n\n.douyin-ui-customizer-panel .setting-group {\n  margin-bottom: 25px;\n  padding: 15px;\n  background: #2d2d2d;\n  border-radius: 8px;\n}\n\n.douyin-ui-customizer-panel .setting-group h3 {\n  margin-top: 0;\n  margin-bottom: 15px;\n  font-size: 16px;\n  font-weight: 600;\n  color: #ffffff;\n}\n\n.douyin-ui-customizer-panel label {\n  display: flex;\n  align-items: center;\n  margin-bottom: 10px;\n  cursor: pointer;\n  font-size: 14px;\n  color: #cccccc;\n  transition: color 0.2s;\n}\n\n.douyin-ui-customizer-panel label:hover {\n  color: #ffffff;\n}\n\n.douyin-ui-customizer-panel input[type=\"checkbox\"],\n.douyin-ui-customizer-panel input[type=\"radio\"] {\n  margin-right: 8px;\n  width: 16px;\n  height: 16px;\n}\n\n.douyin-ui-customizer-panel input[type=\"number\"],\n.douyin-ui-customizer-panel input[type=\"text\"],\n.douyin-ui-customizer-panel select {\n  margin-left: 8px;\n  padding: 6px 10px;\n  border: 1px solid #4d4d4d;\n  border-radius: 4px;\n  font-size: 14px;\n  background: #1a1a1a;\n  color: #ffffff;\n}\n\n.douyin-ui-customizer-panel input[type=\"number\"]:focus,\n.douyin-ui-customizer-panel input[type=\"text\"]:focus,\n.douyin-ui-customizer-panel select:focus {\n  outline: none;\n  border-color: #ffffff;\n}\n\n.douyin-ui-customizer-panel input[type=\"range\"] {\n  margin-left: 8px;\n  margin-right: 8px;\n  flex: 1;\n}\n\n.douyin-ui-customizer-panel input[type=\"color\"] {\n  margin-left: 8px;\n  width: 40px;\n  height: 30px;\n  border: 1px solid #4d4d4d;\n  border-radius: 4px;\n  cursor: pointer;\n}\n\n.douyin-ui-customizer-panel .panel-footer {\n  padding: 20px;\n  background: #2d2d2d;\n  border-top: 1px solid #3d3d3d;\n  display: flex;\n  gap: 10px;\n  justify-content: flex-end;\n}\n\n.douyin-ui-customizer-panel .save-btn,\n.douyin-ui-customizer-panel .reset-btn {\n  padding: 10px 20px;\n  border: none;\n  border-radius: 6px;\n  font-size: 14px;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.2s;\n}\n\n.douyin-ui-customizer-panel .save-btn {\n  background: #ffffff;\n  color: #1a1a1a;\n}\n\n.douyin-ui-customizer-panel .save-btn:hover {\n  background: #e0e0e0;\n}\n\n.douyin-ui-customizer-panel .reset-btn {\n  background: #1a1a1a;\n  color: #cccccc;\n  border: 1px solid #4d4d4d;\n}\n\n.douyin-ui-customizer-panel .reset-btn:hover {\n  background: #3d3d3d;\n  color: #ffffff;\n}\n\n.douyin-ui-customizer-panel button#exportBtn,\n.douyin-ui-customizer-panel button#importBtn {\n  padding: 8px 16px;\n  background: #ffffff;\n  color: #1a1a1a;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  font-size: 14px;\n  margin-bottom: 10px;\n  transition: background-color 0.2s;\n}\n\n.douyin-ui-customizer-panel button#exportBtn:hover,\n.douyin-ui-customizer-panel button#importBtn:hover {\n  background: #e0e0e0;\n}\n\n.douyin-ui-customizer-panel input[type=\"file\"] {\n  margin-bottom: 10px;\n  padding: 8px;\n  border: 1px solid #4d4d4d;\n  border-radius: 4px;\n  font-size: 14px;\n  background: #1a1a1a;\n  color: #ffffff;\n}\n\n.douyin-ui-customizer-panel p {\n  font-size: 13px;\n  color: #999999;\n  margin-top: 5px;\n  line-height: 1.5;\n}\n\n/* 工具提示样式 */\n.douyin-ui-customizer-tooltip {\n  position: absolute;\n  background: rgba(255, 255, 255, 0.9);\n  color: #1a1a1a;\n  padding: 8px 12px;\n  border-radius: 4px;\n  font-size: 12px;\n  pointer-events: none;\n  z-index: 999999;\n  white-space: nowrap;\n}\n\n/* 滚动条样式 */\n.douyin-ui-customizer-panel ::-webkit-scrollbar {\n  width: 8px;\n  height: 8px;\n}\n\n.douyin-ui-customizer-panel ::-webkit-scrollbar-track {\n  background: #3d3d3d;\n  border-radius: 4px;\n}\n\n.douyin-ui-customizer-panel ::-webkit-scrollbar-thumb {\n  background: #666666;\n  border-radius: 4px;\n}\n\n.douyin-ui-customizer-panel ::-webkit-scrollbar-thumb:hover {\n  background: #888888;\n}\n\n/* 响应式设计 */\n@media (max-width: 600px) {\n  .douyin-ui-customizer-panel {\n    width: 95%;\n    max-width: none;\n    margin: 10px;\n    top: 10px;\n    left: 10px;\n    transform: none;\n    max-height: calc(100vh - 20px);\n  }\n  \n  .douyin-ui-customizer-panel .settings-tabs {\n    flex-wrap: wrap;\n  }\n  \n  .douyin-ui-customizer-panel .panel-footer {\n    flex-direction: column;\n  }\n  \n  .douyin-ui-customizer-panel .save-btn,\n  .douyin-ui-customizer-panel .reset-btn {\n    width: 100%;\n  }\n}";
 
+// 工具函数模块
 /**
  * DOM操作工具模块
  * 提供常用的DOM查询、创建、修改和事件处理函数
@@ -67,7 +68,7 @@ function $$(selector, context = document) {
  */
 function createElement(tagName, attributes = {}, children = []) {
   const element = document.createElement(tagName);
-
+  
   // 设置属性
   for (const [key, value] of Object.entries(attributes)) {
     if (key.startsWith('on') && typeof value === 'function') {
@@ -81,7 +82,7 @@ function createElement(tagName, attributes = {}, children = []) {
       element.setAttribute(key, value);
     }
   }
-
+  
   // 添加子元素
   if (typeof children === 'string') {
     element.textContent = children;
@@ -94,7 +95,7 @@ function createElement(tagName, attributes = {}, children = []) {
       }
     });
   }
-
+  
   return element;
 }
 
@@ -105,7 +106,7 @@ function createElement(tagName, attributes = {}, children = []) {
  */
 function addClass(element, className) {
   if (!element || !element.classList) return;
-
+  
   if (Array.isArray(className)) {
     className.forEach(cls => element.classList.add(cls));
   } else {
@@ -120,7 +121,7 @@ function addClass(element, className) {
  */
 function removeClass(element, className) {
   if (!element || !element.classList) return;
-
+  
   if (Array.isArray(className)) {
     className.forEach(cls => element.classList.remove(cls));
   } else {
@@ -325,6 +326,7 @@ function insertBefore(newElement, targetElement) {
   targetElement.parentNode.insertBefore(newElement, targetElement);
 }
 
+// 存储工具模块
 /**
  * 本地存储工具模块
  * 提供数据存储、读取、删除等功能，支持自动序列化和反序列化
@@ -480,7 +482,7 @@ function getStorageInfo() {
       const value = localStorage.getItem(key);
       totalSize += key.length + value.length;
     }
-
+    
     return {
       itemCount: localStorage.length,
       totalSize: totalSize,
@@ -551,19 +553,19 @@ function setItemWithExpiry(key, value, ttl) {
  */
 function getItemWithExpiry(key, defaultValue = null) {
   const item = getItem(key);
-
+  
   // 如果不存在或不是有效的过期项，返回默认值
   if (!item || typeof item !== 'object' || !item.hasOwnProperty('expiry')) {
     return defaultValue;
   }
-
+  
   // 检查是否过期
   if (Date.now() > item.expiry) {
     // 过期了，移除该项
     removeItem(key);
     return defaultValue;
   }
-
+  
   return item.value;
 }
 
@@ -592,12 +594,12 @@ function saveConfigWithVersion(appName, config, version) {
  */
 function loadConfigWithVersion(appName, defaultConfig, currentVersion) {
   const saved = getItem(`${appName}_config`);
-
+  
   if (saved && saved.version === currentVersion) {
     // 版本匹配，返回保存的配置
     return saved.config;
   }
-
+  
   // 版本不匹配或没有保存的配置，返回默认配置
   return defaultConfig;
 }
@@ -613,17 +615,17 @@ function exportStorageToJson(filename = 'storage-export.json') {
       const key = localStorage.key(i);
       data[key] = getItem(key);
     }
-
+    
     const jsonStr = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-
+    
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
-
+    
     // 清理
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
@@ -639,33 +641,34 @@ function exportStorageToJson(filename = 'storage-export.json') {
  */
 function importStorageFromJson(file, callback) {
   const reader = new FileReader();
-
+  
   reader.onload = function(event) {
     try {
       const data = JSON.parse(event.target.result);
-
+      
       // 清空现有存储
       clear();
-
+      
       // 导入数据
       Object.entries(data).forEach(([key, value]) => {
         setItem(key, value);
       });
-
+      
       callback(true);
     } catch (error) {
       console.error('导入存储数据失败:', error);
       callback(false, error);
     }
   };
-
+  
   reader.onerror = function() {
     callback(false, new Error('文件读取失败'));
   };
-
+  
   reader.readAsText(file);
 }
 
+// 配置管理模块
 /**
  * 配置管理模块
  * 负责处理配置的加载、保存和默认设置
@@ -676,7 +679,7 @@ function importStorageFromJson(file, callback) {
  */
 const DEFAULT_CONFIG = {
   theme: 'light', // light 或 dark
-
+  
   // 短视频界面配置
   videoUI: {
     showLikeButton: true,
@@ -693,7 +696,7 @@ const DEFAULT_CONFIG = {
       position: 'bottom'
     }
   },
-
+  
   // 直播间界面配置
   liveUI: {
     showGifts: true,
@@ -710,7 +713,7 @@ const DEFAULT_CONFIG = {
     },
     layout: 'default'
   },
-
+  
   // 通用配置
   general: {
     autoPlay: true,
@@ -773,7 +776,7 @@ function resetConfig() {
  */
 function mergeConfig(userConfig, defaultConfig) {
   const merged = { ...defaultConfig };
-
+  
   for (const key in userConfig) {
     if (userConfig.hasOwnProperty(key)) {
       if (typeof userConfig[key] === 'object' && userConfig[key] !== null && 
@@ -786,7 +789,7 @@ function mergeConfig(userConfig, defaultConfig) {
       }
     }
   }
-
+  
   return merged;
 }
 
@@ -815,17 +818,7 @@ function importConfig(jsonString) {
   }
 }
 
-// 定义页面检测函数
-function isVideoPage() {
-  return location.pathname.includes('/video/') || 
-         location.pathname === '/' || 
-         location.pathname.includes('/user/');
-}
-
-function isLivePage() {
-  return location.pathname.includes('/live/');
-}
-
+// UI管理器模块
 /**
  * UI管理器模块
  * 负责处理界面定制和设置面板
@@ -846,11 +839,11 @@ class UIManager {
    */
   applyVideoCustomizations() {
     console.log('应用短视频界面定制');
-
+    
     if (!this.config.videoUI) return;
-
+    
     const { videoUI } = this.config;
-
+    
     // 隐藏/显示点赞按钮（使用多种策略）
     this.toggleElement(() => {
       // 1. 首先尝试通过可能的点赞图标查找
@@ -858,16 +851,16 @@ class UIManager {
         tagName: 'svg',
         attributes: { viewBox: '0 0 1024 1024' }
       });
-
+      
       if (heartIcons.length > 0) {
         // 找到包含点赞图标的元素，返回其父元素
         return heartIcons.map(icon => icon.closest('div') || icon);
       }
-
+      
       // 2. 通过类名模式匹配
       return this.findElementsByClassPattern(/like|heart/i);
     }, videoUI.showLikeButton);
-
+    
     // 隐藏/显示评论按钮
     this.toggleElement(() => {
       const commentElements = this.findElementsByStructure({
@@ -877,14 +870,14 @@ class UIManager {
           attributes: { viewBox: '0 0 1024 1024' }
         }]
       });
-
+      
       if (commentElements.length > 0) {
         return commentElements;
       }
-
+      
       return this.findElementsByClassPattern(/comment|discuss/i);
     }, videoUI.showCommentButton);
-
+    
     // 隐藏/显示分享按钮
     this.toggleElement(() => {
       const shareElements = this.findElementsByStructure({
@@ -894,7 +887,7 @@ class UIManager {
           attributes: { viewBox: '0 0 1024 1024' }
         }]
       });
-
+      
       if (shareElements.length > 0) {
         return shareElements.filter(el => {
           // 尝试排除已找到的点赞和评论按钮
@@ -902,10 +895,10 @@ class UIManager {
           return text.includes('share') || text.includes('分享');
         });
       }
-
+      
       return this.findElementsByClassPattern(/share|forward/i);
     }, videoUI.showShareButton);
-
+    
     // 隐藏/显示作者信息
     this.toggleElement(() => {
       // 查找包含头像的元素，通常是作者信息
@@ -913,28 +906,28 @@ class UIManager {
         tagName: 'img',
         attributes: { class: /avatar|user/i }
       });
-
+      
       if (avatarElements.length > 0) {
         return avatarElements.map(img => img.closest('div') || img);
       }
-
+      
       return this.findElementsByClassPattern(/author|user|avatar/i);
     }, videoUI.showAuthorInfo);
-
+    
     // 隐藏/显示音乐信息
     this.toggleElement(() => {
       // 查找包含音乐相关文本或图标的元素
       const musicElements = this.findElementsByStructure({
         text: '音乐'
       });
-
+      
       if (musicElements.length > 0) {
         return musicElements.map(el => el.closest('div') || el);
       }
-
+      
       return this.findElementsByClassPattern(/music|sound/i);
     }, videoUI.showMusicInfo);
-
+    
     // 隐藏/显示描述
     this.toggleElement(() => {
       // 查找包含长文本的元素，可能是视频描述
@@ -945,14 +938,14 @@ class UIManager {
                !el.querySelector('img') &&
                !el.querySelector('video');
       });
-
+      
       if (descriptions.length > 0) {
         return descriptions;
       }
-
+      
       return this.findElementsByClassPattern(/desc|description|content/i);
     }, videoUI.showDescription);
-
+    
     // 隐藏/显示推荐
     this.toggleElement(() => {
       // 查找可能包含推荐内容的容器
@@ -962,19 +955,19 @@ class UIManager {
           tagName: 'video'
         }]
       });
-
+      
       if (recommendationContainers.length > 0) {
         return recommendationContainers;
       }
-
+      
       return this.findElementsByClassPattern(/recommend|suggest|related/i);
     }, videoUI.showRecommendations);
-
+    
     // 自定义控制栏
     if (videoUI.controlBar) {
       this.customizeControlBar(videoUI.controlBar);
     }
-
+    
     // 应用自定义布局
     this.applyLayout('video', videoUI.layout);
   }
@@ -984,22 +977,22 @@ class UIManager {
    */
   applyLiveCustomizations() {
     console.log('应用直播间界面定制');
-
+    
     if (!this.config.liveUI) return;
-
+    
     const { liveUI } = this.config;
-
+    
     // 隐藏/显示礼物（添加更多可能的礼物相关选择器）
     this.toggleElement(() => {
       // 查找动画元素，可能是礼物特效
       const animatedElements = this.findElementsByStructure({
         attributes: { class: /animation|effect|gift/i }
       });
-
+      
       if (animatedElements.length > 0) {
         return animatedElements;
       }
-
+      
       // 查找可能包含礼物的容器
       const giftContainers = document.body.querySelectorAll('div');
       const potentialGifts = Array.from(giftContainers).filter(el => {
@@ -1008,11 +1001,11 @@ class UIManager {
         return style.animationName !== 'none' || 
                style.transform !== 'none';
       });
-
+      
       return potentialGifts.length > 0 ? potentialGifts : 
              this.findElementsByClassPattern(/gift|present|reward/i);
     }, liveUI.showGifts);
-
+    
     // 隐藏/显示弹幕
     this.toggleElement(() => {
       // 查找可能包含弹幕的元素
@@ -1024,15 +1017,15 @@ class UIManager {
                style.pointerEvents === 'none' &&
                style.zIndex > 0;
       });
-
+      
       if (potentialBullets.length > 0) {
         return potentialBullets;
       }
-
+      
       // 备用方案：通过类名模式匹配
       return this.findElementsByClassPattern(/danmu|bullet|comment|danmaku/i);
     }, liveUI.showDanmaku);
-
+    
     // 隐藏/显示推荐
     this.toggleElement(() => {
       // 查找可能包含推荐内容的容器
@@ -1042,28 +1035,28 @@ class UIManager {
           tagName: 'img'
         }]
       });
-
+      
       if (recommendationContainers.length > 0) {
         return recommendationContainers;
       }
-
+      
       return this.findElementsByClassPattern(/recommend|suggest|related|live-recommend/i);
     }, liveUI.showRecommendations);
-
+    
     // 隐藏/显示广告
     this.toggleElement(() => {
       // 查找可能是广告的元素
       const adElements = this.findElementsByStructure({
         text: /广告|推广|ad|promotion/i
       });
-
+      
       if (adElements.length > 0) {
         return adElements.map(el => el.closest('div') || el);
       }
-
+      
       return this.findElementsByClassPattern(/ad|advertisement|promotion|广告/i);
     }, liveUI.showAds);
-
+    
     // 隐藏/显示统计信息
     this.toggleElement(() => {
       // 查找可能包含数字的元素，可能是统计信息
@@ -1071,19 +1064,19 @@ class UIManager {
       const potentialStats = Array.from(numberElements).filter(el => {
         return /\d+/.test(el.textContent);
       });
-
+      
       if (potentialStats.length > 0) {
         return potentialStats;
       }
-
+      
       return this.findElementsByClassPattern(/stat|count|number|view/i);
     }, liveUI.showStats);
-
+    
     // 自定义弹幕样式
     if (liveUI.danmaku) {
       this.customizeDanmaku(liveUI.danmaku);
     }
-
+    
     // 应用自定义布局
     this.applyLayout('live', liveUI.layout);
   }
@@ -1095,7 +1088,7 @@ class UIManager {
    */
   toggleElement(selectorOrFinder, show) {
     let elements = [];
-
+    
     // 检查参数类型
     if (typeof selectorOrFinder === 'function') {
       try {
@@ -1109,12 +1102,12 @@ class UIManager {
       // 如果是选择器字符串，则使用querySelectorAll
       elements = document.querySelectorAll(selectorOrFinder);
     }
-
+    
     // 确保elements是数组
     if (!Array.isArray(elements)) {
       elements = Array.from(elements);
     }
-
+    
     // 处理元素显示/隐藏
     elements.forEach(function(element) {
       if (element && element.style) {
@@ -1128,7 +1121,7 @@ class UIManager {
       }
     });
   }
-
+  
   /**
    * 基于结构特征查找元素
    * @param {Object} options - 查找选项
@@ -1136,7 +1129,7 @@ class UIManager {
    */
   findElementsByStructure(options) {
     const result = [];
-
+    
     // 根据选项执行不同的查找策略
     if (options.text) {
       // 通过文本内容查找
@@ -1147,11 +1140,11 @@ class UIManager {
         }
       });
     }
-
+    
     if (options.tagName) {
       // 通过标签名初步筛选
       const elements = document.body.querySelectorAll(options.tagName);
-
+      
       // 如果提供了属性，则进一步筛选
       if (options.attributes) {
         elements.forEach(el => {
@@ -1170,25 +1163,25 @@ class UIManager {
         result.push(...Array.from(elements));
       }
     }
-
+    
     // 如果提供了子元素结构条件
     if (options.children) {
       const candidates = result.length > 0 ? result : document.body.querySelectorAll('*');
       const filtered = [];
-
+      
       candidates.forEach(parent => {
         let match = true;
         for (const childCriteria of options.children) {
           const selector = childCriteria.tagName;
           let found = false;
-
+          
           parent.querySelectorAll(selector).forEach(child => {
             // 检查子元素的条件
             let childMatch = true;
             if (childCriteria.text && !child.textContent.includes(childCriteria.text)) {
               childMatch = false;
             }
-
+            
             if (childCriteria.attributes) {
               for (const [attr, value] of Object.entries(childCriteria.attributes)) {
                 if (!child.hasAttribute(attr) || 
@@ -1198,25 +1191,25 @@ class UIManager {
                 }
               }
             }
-
+            
             if (childMatch) found = true;
           });
-
+          
           if (!found) {
             match = false;
             break;
           }
         });
-
+        
         if (match) filtered.push(parent);
       });
-
+      
       return filtered;
     }
-
+    
     return result;
   }
-
+  
   /**
    * 查找符合模式的类名
    * @param {RegExp} pattern - 类名匹配模式
@@ -1226,13 +1219,13 @@ class UIManager {
   findElementsByClassPattern(pattern, tagName = '*') {
     const elements = document.querySelectorAll(tagName);
     const result = [];
-
+    
     elements.forEach(el => {
       if (el.className && pattern.test(el.className)) {
         result.push(el);
       }
     });
-
+    
     return result;
   }
 
@@ -1243,13 +1236,13 @@ class UIManager {
   customizeControlBar(controlBarConfig) {
     const controlBar = document.querySelector('.video-control-bar');
     if (!controlBar) return;
-
+    
     // 显示/隐藏控制栏
     if (!controlBarConfig.show) {
       controlBar.style.display = 'none';
       return;
     }
-
+    
     // 设置控制栏位置
     if (controlBarConfig.position) {
       controlBar.style.position = 'absolute';
@@ -1266,7 +1259,7 @@ class UIManager {
           controlBar.style.bottom = '0';
       }
     }
-
+    
     // 自动隐藏功能（需要额外的事件监听）
     if (controlBarConfig.autoHide) {
       // 实现自动隐藏逻辑
@@ -1281,27 +1274,27 @@ class UIManager {
     // 添加弹幕样式
     const styleId = 'douyin-danmaku-custom-styles';
     let styleElement = document.getElementById(styleId);
-
+    
     if (!styleElement) {
       styleElement = document.createElement('style');
       styleElement.id = styleId;
       document.head.appendChild(styleElement);
     }
-
+    
     let css = '';
-
+    
     if (danmakuConfig.fontSize) {
       css += `.danmaku { font-size: ${danmakuConfig.fontSize}px !important; }`;
     }
-
+    
     if (danmakuConfig.color) {
       css += `.danmaku { color: ${danmakuConfig.color} !important; }`;
     }
-
+    
     if (danmakuConfig.opacity) {
       css += `.danmaku { opacity: ${danmakuConfig.opacity} !important; }`;
     }
-
+    
     if (danmakuConfig.speed) {
       // 根据速度设置动画时长
       let duration = 6; // 默认6秒
@@ -1317,7 +1310,7 @@ class UIManager {
       }
       css += `.danmaku { animation-duration: ${duration}s !important; }`;
     }
-
+    
     styleElement.textContent = css;
   }
 
@@ -1328,7 +1321,7 @@ class UIManager {
    */
   applyLayout(type, layout) {
     if (!layout || layout === 'default') return;
-
+    
     // 根据不同类型和布局应用相应的样式
     // 这里可以扩展更多布局选项
     console.log(`应用${type}布局：${layout}`);
@@ -1342,7 +1335,7 @@ class UIManager {
     if (this.settingsPanel) {
       this.settingsPanel.remove();
     }
-
+    
     // 创建设置面板
     this.settingsPanel = this.createSettingsPanel();
     document.body.appendChild(this.settingsPanel);
@@ -1367,19 +1360,19 @@ class UIManager {
           <button class="tab-btn" data-tab="live">直播间设置</button>
           <button class="tab-btn" data-tab="import-export">导入导出</button>
         </div>
-
+        
         <div class="tab-content active" id="general-tab">
           ${this.createGeneralSettings()}
         </div>
-
+        
         <div class="tab-content" id="video-tab">
           ${this.createVideoSettings()}
         </div>
-
+        
         <div class="tab-content" id="live-tab">
           ${this.createLiveSettings()}
         </div>
-
+        
         <div class="tab-content" id="import-export-tab">
           ${this.createImportExportSettings()}
         </div>
@@ -1389,10 +1382,10 @@ class UIManager {
         <button class="reset-btn">重置为默认</button>
       </div>
     `;
-
+    
     // 添加事件监听
     this.setupSettingsPanelEvents(panel);
-
+    
     return panel;
   }
 
@@ -1405,27 +1398,27 @@ class UIManager {
     panel.querySelector('.close-btn').addEventListener('click', () => {
       panel.remove();
     });
-
+    
     // 标签切换
     panel.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const tabId = btn.getAttribute('data-tab');
-
+        
         // 移除所有活跃状态
         panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
+        
         // 设置当前活跃状态
         btn.classList.add('active');
         panel.querySelector(`#${tabId}-tab`).classList.add('active');
       });
     });
-
+    
     // 保存按钮
     panel.querySelector('.save-btn').addEventListener('click', () => {
       this.saveSettings(panel);
     });
-
+    
     // 重置按钮
     panel.querySelector('.reset-btn').addEventListener('click', () => {
       if (confirm('确定要重置所有设置吗？')) {
@@ -1434,11 +1427,11 @@ class UIManager {
         location.reload();
       }
     });
-
+    
     // 添加拖动功能
     this.makePanelDraggable(panel);
   }
-
+  
   /**
    * 使设置面板可拖动
    * @param {HTMLElement} panel - 设置面板元素
@@ -1447,48 +1440,48 @@ class UIManager {
     const header = panel.querySelector('.panel-header');
     let isDragging = false;
     let offsetX, offsetY;
-
+    
     // 鼠标按下事件
     header.addEventListener('mousedown', (e) => {
       isDragging = true;
-
+      
       // 计算鼠标相对于面板左上角的偏移量
       const panelRect = panel.getBoundingClientRect();
       offsetX = e.clientX - panelRect.left;
       offsetY = e.clientY - panelRect.top;
-
+      
       // 设置面板为绝对定位（如果还不是）
       if (panel.style.position !== 'fixed') {
         panel.style.position = 'fixed';
       }
-
+      
       // 添加拖拽时的视觉效果
       header.style.cursor = 'grabbing';
     });
-
+    
     // 鼠标移动事件（添加到document以允许鼠标移出面板时仍能拖动）
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
-
+      
       // 计算新位置
       let newX = e.clientX - offsetX;
       let newY = e.clientY - offsetY;
-
+      
       // 限制在视口范围内
       const panelRect = panel.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-
+      
       newX = Math.max(0, Math.min(newX, viewportWidth - panelRect.width));
       newY = Math.max(0, Math.min(newY, viewportHeight - panelRect.height));
-
+      
       // 更新面板位置
       panel.style.left = `${newX}px`;
       panel.style.top = `${newY}px`;
       panel.style.right = 'auto';
       panel.style.bottom = 'auto';
     });
-
+    
     // 鼠标释放事件
     document.addEventListener('mouseup', () => {
       if (isDragging) {
@@ -1496,10 +1489,10 @@ class UIManager {
         header.style.cursor = 'grab';
       }
     });
-
+    
     // 初始化光标样式
     header.style.cursor = 'grab';
-
+    
     // 阻止鼠标按下时的文本选择
     header.addEventListener('selectstart', (e) => {
       e.preventDefault();
@@ -1523,7 +1516,7 @@ class UIManager {
           深色主题
         </label>
       </div>
-
+      
       <div class="setting-group">
         <h3>播放设置</h3>
         <label>
@@ -1535,7 +1528,7 @@ class UIManager {
           自动滚动到下一个视频
         </label>
       </div>
-
+      
       <div class="setting-group">
         <h3>功能设置</h3>
         <label>
@@ -1587,7 +1580,7 @@ class UIManager {
           显示推荐视频
         </label>
       </div>
-
+      
       <div class="setting-group">
         <h3>控制栏设置</h3>
         <label>
@@ -1638,7 +1631,7 @@ class UIManager {
           显示统计信息
         </label>
       </div>
-
+      
       <div class="setting-group">
         <h3>弹幕设置</h3>
         <label>
@@ -1676,7 +1669,7 @@ class UIManager {
         <button id="exportBtn">导出配置</button>
         <p>点击按钮导出当前配置到JSON文件</p>
       </div>
-
+      
       <div class="setting-group">
         <h3>导入配置</h3>
         <input type="file" id="importFile" accept=".json">
@@ -1696,7 +1689,7 @@ class UIManager {
     const notification = document.createElement('div');
     notification.className = `douyin-ui-customizer-notification notification-${type}`;
     notification.textContent = message;
-
+    
     // 添加样式
     Object.assign(notification.style, {
       position: 'fixed',
@@ -1717,10 +1710,10 @@ class UIManager {
       maxWidth: '300px',
       wordWrap: 'break-word'
     });
-
+    
     // 添加到页面
     document.body.appendChild(notification);
-
+    
     // 显示通知
     setTimeout(() => {
       Object.assign(notification.style, {
@@ -1728,14 +1721,14 @@ class UIManager {
         transform: 'translateX(0)'
       });
     }, 10);
-
+    
     // 自动隐藏
     setTimeout(() => {
       Object.assign(notification.style, {
         opacity: '0',
         transform: 'translateX(100%)'
       });
-
+      
       // 移除元素
       setTimeout(() => {
         notification.remove();
@@ -1751,7 +1744,7 @@ class UIManager {
     try {
       // 保存通用设置
       this.config.theme = panel.querySelector('input[name="theme"]:checked').value;
-
+      
       if (!this.config.general) {
         this.config.general = {};
       }
@@ -1759,7 +1752,7 @@ class UIManager {
       this.config.general.autoScroll = panel.querySelector('#autoScroll').checked;
       this.config.general.keyboardShortcuts = panel.querySelector('#keyboardShortcuts').checked;
       this.config.general.notifications = panel.querySelector('#notifications').checked;
-
+      
       // 保存短视频设置
       if (!this.config.videoUI) {
         this.config.videoUI = {};
@@ -1771,14 +1764,14 @@ class UIManager {
       this.config.videoUI.showMusicInfo = panel.querySelector('#showMusicInfo').checked;
       this.config.videoUI.showDescription = panel.querySelector('#showDescription').checked;
       this.config.videoUI.showRecommendations = panel.querySelector('#showRecommendations').checked;
-
+      
       if (!this.config.videoUI.controlBar) {
         this.config.videoUI.controlBar = {};
       }
       this.config.videoUI.controlBar.show = panel.querySelector('#controlBarShow').checked;
       this.config.videoUI.controlBar.autoHide = panel.querySelector('#controlBarAutoHide').checked;
       this.config.videoUI.controlBar.position = panel.querySelector('#controlBarPosition').value;
-
+      
       // 保存直播间设置
       if (!this.config.liveUI) {
         this.config.liveUI = {};
@@ -1788,7 +1781,7 @@ class UIManager {
       this.config.liveUI.showRecommendations = panel.querySelector('#showRecommendations').checked;
       this.config.liveUI.showAds = panel.querySelector('#showAds').checked;
       this.config.liveUI.showStats = panel.querySelector('#showStats').checked;
-
+      
       if (!this.config.liveUI.danmaku) {
         this.config.liveUI.danmaku = {};
       }
@@ -1796,15 +1789,15 @@ class UIManager {
       this.config.liveUI.danmaku.color = panel.querySelector('#danmakuColor').value;
       this.config.liveUI.danmaku.opacity = parseFloat(panel.querySelector('#danmakuOpacity').value);
       this.config.liveUI.danmaku.speed = panel.querySelector('#danmakuSpeed').value;
-
+      
       // 保存配置
       saveConfig(this.config);
-
+      
       // 为确保配置完全保存，添加一个小延迟后再应用设置
       setTimeout(() => {
         // 应用新设置
         injectStyles(this.config.theme);
-
+        
         // 强制重新应用UI定制
         if (isVideoPage()) {
           // 清除现有样式并重新应用
@@ -1822,10 +1815,10 @@ class UIManager {
           }
           this.applyLiveCustomizations();
         }
-
+        
         // 显示保存成功提示
         this.showNotification('设置已成功保存并应用！', 'success');
-
+        
         // 延迟关闭设置面板
         setTimeout(() => {
           panel.remove();
@@ -1838,15 +1831,18 @@ class UIManager {
   }
 }
 
+// 主脚本逻辑
 /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
  * 版本：1.0.12
  */
+
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.20';
+const CURRENT_VERSION = '1.0.24';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
+
 /**
  * 检查脚本更新
  */
@@ -1854,6 +1850,7 @@ async function checkForUpdates(showNoUpdateMessage = false) {
   try {
     // 从GitHub获取最新版本的脚本
     const updateUrl = 'https://github.com/SutChan/douyin_tool/raw/main/dist/douyin_ui_customizer.user.js';
+    
     GM_xmlhttpRequest({
       method: 'GET',
       url: updateUrl,
@@ -1862,8 +1859,10 @@ async function checkForUpdates(showNoUpdateMessage = false) {
           // 从脚本头部提取版本号
           const scriptContent = response.responseText;
           const versionMatch = scriptContent.match(/@version\s+(\d+\.\d+\.\d+)/i);
+          
           if (versionMatch && versionMatch[1]) {
             const latestVersion = versionMatch[1];
+            
             // 比较版本号
             if (isNewerVersion(latestVersion, CURRENT_VERSION)) {
               if (confirm(`发现新版本 ${latestVersion}！是否更新脚本？\n\n当前版本：${CURRENT_VERSION}`)) {
@@ -1886,6 +1885,7 @@ async function checkForUpdates(showNoUpdateMessage = false) {
     console.error('检查更新时发生错误：', error);
   }
 }
+
 /**
  * 比较版本号
  * @param {string} newVersion - 新版本号
@@ -1895,43 +1895,56 @@ async function checkForUpdates(showNoUpdateMessage = false) {
 function isNewerVersion(newVersion, currentVersion) {
   const newParts = newVersion.split('.').map(Number);
   const currentParts = currentVersion.split('.').map(Number);
+  
   for (let i = 0; i < newParts.length; i++) {
     if (newParts[i] > currentParts[i]) return true;
     if (newParts[i] < currentParts[i]) return false;
   }
+  
   return false;
 }
+
 /**
  * 检查是否需要进行自动更新检查
  */
 function shouldCheckForUpdates() {
   const lastCheckTime = getItem('lastUpdateCheckTime', 0);
   const now = Date.now();
+  
   // 如果距离上次检查超过了设定的间隔时间
   if (now - lastCheckTime > UPDATE_CHECK_INTERVAL) {
     setItem('lastUpdateCheckTime', now);
     return true;
   }
+  
   return false;
 }
+
 // 初始化函数
 function init() {
   console.log('抖音UI定制工具已启动');
+  
   // 加载配置
   const config = loadConfig();
+  
   // 初始化UI管理器
   const uiManager = new UIManager(config);
+  
   // 注入样式
   injectStyles(config.theme);
+  
   // 监听页面变化
   observePageChanges(uiManager);
+  
   // 注册油猴菜单命令
   registerMenuCommands(uiManager);
+  
   // 检查是否需要进行自动更新检查
   if (shouldCheckForUpdates()) {
     checkForUpdates(false);
   }
 }
+
 /**
  * 注入样式
  * @param {string} theme - 主题名称
@@ -1942,22 +1955,27 @@ function injectStyles(theme) {
   if (oldStyle) {
     oldStyle.remove();
   }
+  
   // 注入新样式
   const styleElement = document.createElement('style');
   styleElement.id = 'douyin-ui-customizer-styles';
+  
   // 根据主题选择样式
   if (theme === 'dark') {
     styleElement.textContent = darkStyles;
   } else {
     styleElement.textContent = defaultStyles;
   }
+  
   document.head.appendChild(styleElement);
+  
   // 注入自定义样式
   const customStyle = document.createElement('style');
   customStyle.id = 'douyin-ui-customizer-custom';
   customStyle.textContent = generateCustomStyles();
   document.head.appendChild(customStyle);
 }
+
 /**
  * 生成自定义样式
  * @returns {string} 自定义CSS
@@ -1965,47 +1983,57 @@ function injectStyles(theme) {
 function generateCustomStyles() {
   const config = loadConfig();
   let customCSS = '';
+  
   // 短视频界面定制样式
   if (config.videoUI) {
     // 隐藏点赞按钮
     if (!config.videoUI.showLikeButton) {
       customCSS += '.like-button { display: none !important; }';
     }
+    
     // 隐藏评论按钮
     if (!config.videoUI.showCommentButton) {
       customCSS += '.comment-button { display: none !important; }';
     }
+    
     // 隐藏分享按钮
     if (!config.videoUI.showShareButton) {
       customCSS += '.share-button { display: none !important; }';
     }
+    
     // 隐藏作者信息
     if (!config.videoUI.showAuthorInfo) {
       customCSS += '.author-info { display: none !important; }';
     }
+    
     // 隐藏音乐信息
     if (!config.videoUI.showMusicInfo) {
       customCSS += '.music-info, .music-label, .sound-info { display: none !important; }';
     }
+    
     // 隐藏视频描述
     if (!config.videoUI.showDescription) {
       customCSS += '.video-desc, .description, .video-content { display: none !important; }';
     }
+    
     // 调整界面元素布局
     if (config.videoUI.layout) {
       // 这里可以根据配置添加相应的布局样式
     }
   }
+  
   // 直播间界面定制样式
   if (config.liveUI) {
     // 隐藏礼物动画
     if (!config.liveUI.showGifts) {
       customCSS += '.gift-animation, .gift-container { display: none !important; }';
     }
+    
     // 隐藏推荐和广告
     if (!config.liveUI.showRecommendations) {
       customCSS += '.live-recommendations, .live-ads { display: none !important; }';
     }
+    
     // 自定义弹幕样式
     if (config.liveUI.danmaku) {
       if (config.liveUI.danmaku.fontSize) {
@@ -2016,8 +2044,10 @@ function generateCustomStyles() {
       }
     }
   }
+  
   return customCSS;
 }
+
 /**
  * 监听页面变化
  * @param {UIManager} uiManager - UI管理器实例
@@ -2029,16 +2059,19 @@ function observePageChanges(uiManager) {
     if (isVideoPage()) {
       uiManager.applyVideoCustomizations();
     }
+    
     // 检查是否是直播间页面
     if (isLivePage()) {
       uiManager.applyLiveCustomizations();
     }
   });
+  
   // 开始观察
   observer.observe(document.body, {
     childList: true,
     subtree: true
   });
+  
   // 初始应用
   setTimeout(() => {
     if (isVideoPage()) {
@@ -2049,6 +2082,7 @@ function observePageChanges(uiManager) {
     }
   }, 1000);
 }
+
 /**
  * 检查是否是短视频页面
  * @returns {boolean} 是否是短视频页面
@@ -2058,6 +2092,7 @@ function isVideoPage() {
          location.pathname === '/' || 
          location.pathname.includes('/user/');
 }
+
 /**
  * 检查是否是直播间页面
  * @returns {boolean} 是否是直播间页面
@@ -2065,6 +2100,7 @@ function isVideoPage() {
 function isLivePage() {
   return location.pathname.includes('/live/');
 }
+
 /**
  * 创建浮动设置按钮
  * @param {UIManager} uiManager - UI管理器实例
@@ -2074,6 +2110,7 @@ function createFloatingSettingsButton(uiManager) {
   if (document.getElementById('douyin-ui-customizer-float-btn')) {
     return;
   }
+
   // 创建浮动按钮元素
   const floatButton = document.createElement('div');
   floatButton.id = 'douyin-ui-customizer-float-btn';
@@ -2096,19 +2133,24 @@ function createFloatingSettingsButton(uiManager) {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
   `;
+
   // 添加点击事件
   floatButton.addEventListener('click', () => {
     uiManager.showSettingsPanel();
   });
+
   // 添加悬停效果
   floatButton.addEventListener('mouseenter', () => {
     floatButton.style.transform = 'scale(1.1)';
   });
+  
   floatButton.addEventListener('mouseleave', () => {
     floatButton.style.transform = 'scale(1)';
   });
+
   // 添加到文档中
   document.body.appendChild(floatButton);
+
   // 定期检查按钮是否存在，避免被页面脚本移除
   setInterval(() => {
     if (!document.getElementById('douyin-ui-customizer-float-btn')) {
@@ -2116,6 +2158,7 @@ function createFloatingSettingsButton(uiManager) {
     }
   }, 5000); // 每5秒检查一次
 }
+
 /**
  * 注册油猴菜单命令
  * @param {UIManager} uiManager - UI管理器实例
@@ -2123,10 +2166,12 @@ function createFloatingSettingsButton(uiManager) {
 function registerMenuCommands(uiManager) {
   // 创建浮动设置按钮
   createFloatingSettingsButton(uiManager);
+  
   // 打开设置面板
   GM_registerMenuCommand('打开设置面板', () => {
     uiManager.showSettingsPanel();
   });
+  
   // 切换暗黑模式
   GM_registerMenuCommand('切换暗黑模式', () => {
     const config = loadConfig();
@@ -2134,10 +2179,12 @@ function registerMenuCommands(uiManager) {
     saveConfig(config);
     injectStyles(config.theme);
   });
+  
   // 手动检查更新
   GM_registerMenuCommand('检查更新', () => {
     checkForUpdates(true);
   });
+  
   // 重置设置
   GM_registerMenuCommand('重置所有设置', () => {
     if (confirm('确定要重置所有设置吗？')) {
@@ -2146,6 +2193,7 @@ function registerMenuCommands(uiManager) {
     }
   });
 }
+
 // 当页面加载完成后初始化
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);

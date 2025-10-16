@@ -87,52 +87,32 @@ async function build() {
   const defaultCSS = readFile(path.join(__dirname, 'src', 'styles', 'default.css'));
   const darkCSS = readFile(path.join(__dirname, 'src', 'styles', 'dark.css'));
   
-  // 使用直接字符串拼接方式合并JS代码，避免模板字符串可能引入的语法问题
+  // 完全简化的代码合并方式，避免任何可能引入语法错误的处理
   let combinedJS = 
-    // CSS样式
-    "// CSS样式\n" +
+    "// CSS样式定义\n" +
     "const defaultStyles = " + JSON.stringify(defaultCSS) + ";\n" +
-    "const darkStyles = " + JSON.stringify(darkCSS) + ";\n\n" +
-    
-    // 工具函数和基础模块
-    domUtilsJS + "\n\n" +
-    
-    // 存储工具
-    storageUtilsJS + "\n\n" +
-    
-    // 配置管理
-    configJS + "\n\n" +
-    
-    // 定义页面检测函数
-    "// 定义页面检测函数\n" +
-    "function isVideoPage() {\n" +
-    "  return location.pathname.includes('/video/') || \n" +
-    "         location.pathname === '/' || \n" +
-    "         location.pathname.includes('/user/');\n" +
-    "}\n\n" +
-    
-    "function isLivePage() {\n" +
-    "  return location.pathname.includes('/live/');\n" +
-    "}\n\n" +
-    
-    // 加载UI管理器
-    uiManagerJS + "\n\n" +
-    
-    // 主脚本逻辑
+    "const darkStyles = " + JSON.stringify(darkCSS) + ";\n" +
+    "\n" +
+    "// 工具函数模块\n" +
+    domUtilsJS + "\n" +
+    "\n" +
+    "// 存储工具模块\n" +
+    storageUtilsJS + "\n" +
+    "\n" +
+    "// 配置管理模块\n" +
+    configJS + "\n" +
+    "\n" +
+    "// UI管理器模块\n" +
+    uiManagerJS + "\n" +
+    "\n" +
+    "// 主脚本逻辑\n" +
     mainJS;
   
-  // 移除可能的多余分号和语法问题
-  combinedJS = combinedJS
-    .replace(/;;+/g, ';')  // 移除多余的分号
-    .replace(/\{\s*\}/g, '{}')  // 清理空对象/函数
-    .replace(/^\s*$/gm, '')  // 移除空行
-    .trim();
-  
-  // 压缩JS
-  const compressedJS = await compressJS(combinedJS);
+  // 直接使用原始代码，不进行任何处理
+  const compressedJS = combinedJS;
   
   // 生成最终脚本
-  const finalScript = `${generateUserscriptHeader()}\n\n${compressedJS}`;
+  const finalScript = generateUserscriptHeader() + "\n\n" + compressedJS;
   
   // 写入文件
   const outputPath = path.join(distDir, 'douyin_ui_customizer.user.js');
