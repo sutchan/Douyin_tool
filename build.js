@@ -94,32 +94,43 @@ async function build() {
     // 最安全的代码合并方式：使用简单字符串连接，避免任何可能引入语法错误的处理
     let combinedJS = "";
     
-    // 添加分号和换行作为安全分隔符
-    const safeSeparator = ";\n\n";    
+    // 添加分号和换行作为安全分隔符，确保模块间正确分隔
+    const safeSeparator = ";\n\n// 模块分隔符\n\n";    
+    
+    console.log('开始合并代码...');
+    
     // 1. CSS样式定义
+    console.log('合并CSS样式定义...');
     combinedJS += "// CSS样式定义\n";
     combinedJS += "const defaultStyles = " + JSON.stringify(defaultCSS) + ";\n";
     combinedJS += "const darkStyles = " + JSON.stringify(darkCSS) + ";" + safeSeparator;
     
     // 2. 工具函数模块
+    console.log('合并工具函数模块...');
     combinedJS += "// 工具函数模块\n";
-    combinedJS += domUtilsJS + safeSeparator;
+    combinedJS += domUtilsJS.replace(/\s*$/, '') + safeSeparator;
     
     // 3. 存储工具模块
+    console.log('合并存储工具模块...');
     combinedJS += "// 存储工具模块\n";
-    combinedJS += storageUtilsJS + safeSeparator;
+    combinedJS += storageUtilsJS.replace(/\s*$/, '') + safeSeparator;
     
     // 4. 配置管理模块
+    console.log('合并配置管理模块...');
     combinedJS += "// 配置管理模块\n";
-    combinedJS += configJS + safeSeparator;
+    combinedJS += configJS.replace(/\s*$/, '') + safeSeparator;
     
     // 5. UI管理器模块
+    console.log('合并UI管理器模块...');
     combinedJS += "// UI管理器模块\n";
-    combinedJS += uiManagerJS + safeSeparator;
+    combinedJS += uiManagerJS.replace(/\s*$/, '') + safeSeparator;
     
     // 6. 主脚本逻辑
+    console.log('合并主脚本逻辑...');
     combinedJS += "// 主脚本逻辑\n";
-    combinedJS += mainJS;
+    combinedJS += mainJS.replace(/\s*$/, '');
+    
+    console.log('代码合并完成！');
     
     // 生成最终脚本，使用简单的字符串连接
     const header = generateUserscriptHeader();
