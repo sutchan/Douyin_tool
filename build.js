@@ -9,7 +9,20 @@ if (!fs.existsSync(distDir)) {
 }
 
 // 读取package.json信息
-const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+let pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+
+// 自动递增最小版本号
+function incrementVersion(version) {
+  const parts = version.split('.').map(Number);
+  parts[parts.length - 1] += 1; // 递增最小版本号
+  return parts.join('.');
+}
+
+// 更新版本号
+pkg.version = incrementVersion(pkg.version);
+// 写回package.json
+fs.writeFileSync(path.join(__dirname, 'package.json'), JSON.stringify(pkg, null, 2), 'utf8');
+console.log(`版本号已更新至: ${pkg.version}`);
 
 // 生成油猴脚本头部
 function generateUserscriptHeader() {

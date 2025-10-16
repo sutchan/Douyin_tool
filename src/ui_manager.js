@@ -303,6 +303,76 @@ class UIManager {
         location.reload();
       }
     });
+    
+    // 添加拖动功能
+    this.makePanelDraggable(panel);
+  }
+  
+  /**
+   * 使设置面板可拖动
+   * @param {HTMLElement} panel - 设置面板元素
+   */
+  makePanelDraggable(panel) {
+    const header = panel.querySelector('.panel-header');
+    let isDragging = false;
+    let offsetX, offsetY;
+    
+    // 鼠标按下事件
+    header.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      
+      // 计算鼠标相对于面板左上角的偏移量
+      const panelRect = panel.getBoundingClientRect();
+      offsetX = e.clientX - panelRect.left;
+      offsetY = e.clientY - panelRect.top;
+      
+      // 设置面板为绝对定位（如果还不是）
+      if (panel.style.position !== 'fixed') {
+        panel.style.position = 'fixed';
+      }
+      
+      // 添加拖拽时的视觉效果
+      header.style.cursor = 'grabbing';
+    });
+    
+    // 鼠标移动事件（添加到document以允许鼠标移出面板时仍能拖动）
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      
+      // 计算新位置
+      let newX = e.clientX - offsetX;
+      let newY = e.clientY - offsetY;
+      
+      // 限制在视口范围内
+      const panelRect = panel.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      newX = Math.max(0, Math.min(newX, viewportWidth - panelRect.width));
+      newY = Math.max(0, Math.min(newY, viewportHeight - panelRect.height));
+      
+      // 更新面板位置
+      panel.style.left = `${newX}px`;
+      panel.style.top = `${newY}px`;
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+    });
+    
+    // 鼠标释放事件
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        header.style.cursor = 'grab';
+      }
+    });
+    
+    // 初始化光标样式
+    header.style.cursor = 'grab';
+    
+    // 阻止鼠标按下时的文本选择
+    header.addEventListener('selectstart', (e) => {
+      e.preventDefault();
+    });
   }
 
   /**
@@ -599,18 +669,32 @@ class UIManager {
       // 保存配置
       saveConfig(this.config);
       
-      // 应用新设置
-      injectStyles(this.config.theme);
-      
-      if (isVideoPage()) {
-        this.applyVideoCustomizations();
-      }
-      if (isLivePage()) {
-        this.applyLiveCustomizations();
-      }
-      
-      // 显示保存成功提示
-      this.showNotification('设置已成功保存！', 'success');
+      // 为确保配置完全保存，添加一个小延迟后再应用设置
+      setTimeout(() => {
+        // 应用新设置
+        injectStyles(this.config.theme);
+        
+        // 强制重新应用UI定制
+        if (isVideoPage()) {
+          // 清除现有样式并重新应用
+          const customStyle = document.getElementById('douyin-ui-customizer-custom');
+          if (customStyle) {
+            customStyle.remove();
+          }
+          this.applyVideoCustomizations();
+        }
+        if (isLivePage()) {
+          // 清除现有样式并重新应用
+          const customStyle = document.getElementById('douyin-ui-customizer-custom');
+          if (customStyle) {
+            customStyle.remove();
+          }
+          this.applyLiveCustomizations();
+        }
+        
+        // 显示保存成功提示
+        this.showNotification('设置已成功保存并应用！', 'success');
+      }, 100);
     } catch (error) {
       console.error('保存设置失败:', error);
       this.showNotification('保存设置失败，请重试', 'error');
