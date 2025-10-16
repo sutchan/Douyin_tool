@@ -78,6 +78,7 @@ async function build() {
   
   try {
     // 读取所有JS文件
+    console.log('正在读取文件...');
     const mainJS = readFile(path.join(__dirname, 'src', 'main.js'));
     const configJS = readFile(path.join(__dirname, 'src', 'config.js'));
     const uiManagerJS = readFile(path.join(__dirname, 'src', 'ui_manager.js'));
@@ -88,34 +89,33 @@ async function build() {
     const defaultCSS = readFile(path.join(__dirname, 'src', 'styles', 'default.css'));
     const darkCSS = readFile(path.join(__dirname, 'src', 'styles', 'dark.css'));
     
+    console.log('文件读取完成，开始合并...');
+    
     // 最安全的代码合并方式：使用简单字符串连接，避免任何可能引入语法错误的处理
     let combinedJS = "";
     
+    // 添加分号和换行作为安全分隔符
+    const safeSeparator = ";\n\n";    
     // 1. CSS样式定义
     combinedJS += "// CSS样式定义\n";
     combinedJS += "const defaultStyles = " + JSON.stringify(defaultCSS) + ";\n";
-    combinedJS += "const darkStyles = " + JSON.stringify(darkCSS) + ";\n";
-    combinedJS += "\n";
+    combinedJS += "const darkStyles = " + JSON.stringify(darkCSS) + ";" + safeSeparator;
     
     // 2. 工具函数模块
     combinedJS += "// 工具函数模块\n";
-    combinedJS += domUtilsJS;
-    combinedJS += "\n\n";
+    combinedJS += domUtilsJS + safeSeparator;
     
     // 3. 存储工具模块
     combinedJS += "// 存储工具模块\n";
-    combinedJS += storageUtilsJS;
-    combinedJS += "\n\n";
+    combinedJS += storageUtilsJS + safeSeparator;
     
     // 4. 配置管理模块
     combinedJS += "// 配置管理模块\n";
-    combinedJS += configJS;
-    combinedJS += "\n\n";
+    combinedJS += configJS + safeSeparator;
     
     // 5. UI管理器模块
     combinedJS += "// UI管理器模块\n";
-    combinedJS += uiManagerJS;
-    combinedJS += "\n\n";
+    combinedJS += uiManagerJS + safeSeparator;
     
     // 6. 主脚本逻辑
     combinedJS += "// 主脚本逻辑\n";
