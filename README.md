@@ -28,7 +28,15 @@
 
 ## 安装方法
 
-### 方法一：一键点击导入（最简单）
+### 方法一：通过Tampermonkey官方页面一键导入
+1. 确保已安装油猴浏览器扩展：
+   - Chrome/Edge: [Tampermonkey](https://www.tampermonkey.net/)
+   - Firefox: [Greasemonkey](https://addons.mozilla.org/zh-CN/firefox/addon/greasemonkey/)
+2. 点击以下链接：
+   `https://www.tampermonkey.net/script_installation.php#url=https://github.com/SutChan/douyin_tool/raw/main/dist/douyin_ui_customizer.user.js`
+3. 油猴扩展会自动弹出安装确认窗口，点击安装即可
+
+### 方法二：本地一键导入（适合本地开发）
 1. 确保已安装油猴浏览器扩展：
    - Chrome/Edge: [Tampermonkey](https://www.tampermonkey.net/)
    - Firefox: [Greasemonkey](https://addons.mozilla.org/zh-CN/firefox/addon/greasemonkey/)
@@ -37,13 +45,13 @@
 4. 在打开的页面中点击「一键导入到油猴」按钮
 5. 油猴扩展会自动弹出安装确认窗口，点击安装即可
 
-### 方法二：本地构建（推荐）
+### 方法三：本地构建（推荐）
 1. 克隆项目：`git clone https://github.com/SutChan/douyin_tool.git`
 2. 安装依赖：`npm install`
 3. 构建脚本：`npm run build`
 4. 在油猴中安装生成的脚本：打开`dist/douyin_ui_customizer.user.js`文件并复制内容，然后在油猴扩展中创建新脚本并粘贴
 
-### 方法三：直接使用
+### 方法四：直接使用
 1. 安装油猴浏览器扩展：
    - Chrome/Edge: [Tampermonkey](https://www.tampermonkey.net/)
    - Firefox: [Greasemonkey](https://addons.mozilla.org/zh-CN/firefox/addon/greasemonkey/)
