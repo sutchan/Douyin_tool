@@ -1,0 +1,22 @@
+{
+  "name": "douyin-ui-customizer",
+  "version": "1.0.0",
+  "description": "抖音Web端界面UI定制工具",
+  "main": "src/main.js",
+  "scripts": {
+    "build": "node build.js",
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "keywords": [
+    "douyin",
+    "tiktok",
+    "ui-customizer",
+    "tampermonkey",
+    "userscript"
+  ],
+  "author": "SutChan",
+  "license": "MIT",
+  "devDependencies": {
+    "terser": "^5.17.1"
+  }
+}

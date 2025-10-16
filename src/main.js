@@ -1,0 +1,205 @@
+/**
+ * 抖音Web端界面UI定制工具主入口
+ * 作者：SutChan
+ * 版本：1.0.0
+ */
+
+// 初始化函数
+function init() {
+  console.log('抖音UI定制工具已启动');
+  
+  // 加载配置
+  const config = loadConfig();
+  
+  // 初始化UI管理器
+  const uiManager = new UIManager(config);
+  
+  // 注入样式
+  injectStyles(config.theme);
+  
+  // 监听页面变化
+  observePageChanges(uiManager);
+  
+  // 注册油猴菜单命令
+  registerMenuCommands(uiManager);
+}
+
+/**
+ * 注入样式
+ * @param {string} theme - 主题名称
+ */
+function injectStyles(theme) {
+  // 移除可能存在的旧样式
+  const oldStyle = document.getElementById('douyin-ui-customizer-styles');
+  if (oldStyle) {
+    oldStyle.remove();
+  }
+  
+  // 注入新样式
+  const styleElement = document.createElement('style');
+  styleElement.id = 'douyin-ui-customizer-styles';
+  
+  // 根据主题选择样式
+  if (theme === 'dark') {
+    styleElement.textContent = darkStyles;
+  } else {
+    styleElement.textContent = defaultStyles;
+  }
+  
+  document.head.appendChild(styleElement);
+  
+  // 注入自定义样式
+  const customStyle = document.createElement('style');
+  customStyle.id = 'douyin-ui-customizer-custom';
+  customStyle.textContent = generateCustomStyles();
+  document.head.appendChild(customStyle);
+}
+
+/**
+ * 生成自定义样式
+ * @returns {string} 自定义CSS
+ */
+function generateCustomStyles() {
+  const config = loadConfig();
+  let customCSS = '';
+  
+  // 短视频界面定制样式
+  if (config.videoUI) {
+    // 隐藏点赞按钮
+    if (!config.videoUI.showLikeButton) {
+      customCSS += '.like-button { display: none !important; }';
+    }
+    
+    // 隐藏评论按钮
+    if (!config.videoUI.showCommentButton) {
+      customCSS += '.comment-button { display: none !important; }';
+    }
+    
+    // 隐藏分享按钮
+    if (!config.videoUI.showShareButton) {
+      customCSS += '.share-button { display: none !important; }';
+    }
+    
+    // 隐藏作者信息
+    if (!config.videoUI.showAuthorInfo) {
+      customCSS += '.author-info { display: none !important; }';
+    }
+    
+    // 调整界面元素布局
+    if (config.videoUI.layout) {
+      // 这里可以根据配置添加相应的布局样式
+    }
+  }
+  
+  // 直播间界面定制样式
+  if (config.liveUI) {
+    // 隐藏礼物动画
+    if (!config.liveUI.showGifts) {
+      customCSS += '.gift-animation, .gift-container { display: none !important; }';
+    }
+    
+    // 隐藏推荐和广告
+    if (!config.liveUI.showRecommendations) {
+      customCSS += '.live-recommendations, .live-ads { display: none !important; }';
+    }
+    
+    // 自定义弹幕样式
+    if (config.liveUI.danmaku) {
+      if (config.liveUI.danmaku.fontSize) {
+        customCSS += `.danmaku { font-size: ${config.liveUI.danmaku.fontSize}px !important; }`;
+      }
+      if (config.liveUI.danmaku.color) {
+        customCSS += `.danmaku { color: ${config.liveUI.danmaku.color} !important; }`;
+      }
+    }
+  }
+  
+  return customCSS;
+}
+
+/**
+ * 监听页面变化
+ * @param {UIManager} uiManager - UI管理器实例
+ */
+function observePageChanges(uiManager) {
+  // 使用MutationObserver监听DOM变化
+  const observer = new MutationObserver((mutations) => {
+    // 检查是否是短视频页面
+    if (isVideoPage()) {
+      uiManager.applyVideoCustomizations();
+    }
+    
+    // 检查是否是直播间页面
+    if (isLivePage()) {
+      uiManager.applyLiveCustomizations();
+    }
+  });
+  
+  // 开始观察
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+  
+  // 初始应用
+  setTimeout(() => {
+    if (isVideoPage()) {
+      uiManager.applyVideoCustomizations();
+    }
+    if (isLivePage()) {
+      uiManager.applyLiveCustomizations();
+    }
+  }, 1000);
+}
+
+/**
+ * 检查是否是短视频页面
+ * @returns {boolean} 是否是短视频页面
+ */
+function isVideoPage() {
+  return location.pathname.includes('/video/') || 
+         location.pathname === '/' || 
+         location.pathname.includes('/user/');
+}
+
+/**
+ * 检查是否是直播间页面
+ * @returns {boolean} 是否是直播间页面
+ */
+function isLivePage() {
+  return location.pathname.includes('/live/');
+}
+
+/**
+ * 注册油猴菜单命令
+ * @param {UIManager} uiManager - UI管理器实例
+ */
+function registerMenuCommands(uiManager) {
+  // 打开设置面板
+  GM_registerMenuCommand('打开设置面板', () => {
+    uiManager.showSettingsPanel();
+  });
+  
+  // 切换暗黑模式
+  GM_registerMenuCommand('切换暗黑模式', () => {
+    const config = loadConfig();
+    config.theme = config.theme === 'dark' ? 'light' : 'dark';
+    saveConfig(config);
+    injectStyles(config.theme);
+  });
+  
+  // 重置设置
+  GM_registerMenuCommand('重置所有设置', () => {
+    if (confirm('确定要重置所有设置吗？')) {
+      resetConfig();
+      location.reload();
+    }
+  });
+}
+
+// 当页面加载完成后初始化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
