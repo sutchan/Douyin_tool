@@ -116,11 +116,17 @@ async function build() {
     combinedJS += "// UI管理器模块\n";
     combinedJS += uiManagerJS.replace(/\s*$/, '') + safeSeparator;
     
-    // 6. 主脚本逻辑 - 替换CURRENT_VERSION为更新后的版本号
+    // 6. 主脚本逻辑 - 只合并main.js中油猴元数据之后的内容
     console.log('合并主脚本逻辑...');
     combinedJS += "// 主脚本逻辑\n";
-    // 更新main.js中的版本号以匹配package.json
-    const updatedMainJS = mainJS.replace(/const CURRENT_VERSION = '[^']+'/, `const CURRENT_VERSION = '${pkg.version}'`);
+    // 提取main.js中油猴脚本元数据之后的内容
+    let mainJSContent = mainJS;
+    const metaEndIndex = mainJS.indexOf('// ==/UserScript==');
+    if (metaEndIndex !== -1) {
+      mainJSContent = mainJS.substring(metaEndIndex + 17); // 17是"// ==/UserScript=="的长度
+    }
+    // 更新版本号
+    const updatedMainJS = mainJSContent.replace(/const CURRENT_VERSION = '[^']+'/, `const CURRENT_VERSION = '${pkg.version}'`);
     combinedJS += updatedMainJS.replace(/\s*$/, '');
     
     console.log('代码合并完成！');
