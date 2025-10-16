@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.25
+// @version      1.0.28
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -1839,7 +1839,7 @@ class UIManager {
  */
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.24';
+const CURRENT_VERSION = '1.0.27';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 

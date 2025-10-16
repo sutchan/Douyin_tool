@@ -76,49 +76,64 @@ async function compressJS(jsCode) {
 async function build() {
   console.log('开始构建...');
   
-  // 读取所有JS文件
-  const mainJS = readFile(path.join(__dirname, 'src', 'main.js'));
-  const configJS = readFile(path.join(__dirname, 'src', 'config.js'));
-  const uiManagerJS = readFile(path.join(__dirname, 'src', 'ui_manager.js'));
-  const domUtilsJS = readFile(path.join(__dirname, 'src', 'utils', 'dom.js'));
-  const storageUtilsJS = readFile(path.join(__dirname, 'src', 'utils', 'storage.js'));
-  
-  // 读取CSS文件
-  const defaultCSS = readFile(path.join(__dirname, 'src', 'styles', 'default.css'));
-  const darkCSS = readFile(path.join(__dirname, 'src', 'styles', 'dark.css'));
-  
-  // 完全简化的代码合并方式，避免任何可能引入语法错误的处理
-  let combinedJS = 
-    "// CSS样式定义\n" +
-    "const defaultStyles = " + JSON.stringify(defaultCSS) + ";\n" +
-    "const darkStyles = " + JSON.stringify(darkCSS) + ";\n" +
-    "\n" +
-    "// 工具函数模块\n" +
-    domUtilsJS + "\n" +
-    "\n" +
-    "// 存储工具模块\n" +
-    storageUtilsJS + "\n" +
-    "\n" +
-    "// 配置管理模块\n" +
-    configJS + "\n" +
-    "\n" +
-    "// UI管理器模块\n" +
-    uiManagerJS + "\n" +
-    "\n" +
-    "// 主脚本逻辑\n" +
-    mainJS;
-  
-  // 直接使用原始代码，不进行任何处理
-  const compressedJS = combinedJS;
-  
-  // 生成最终脚本
-  const finalScript = generateUserscriptHeader() + "\n\n" + compressedJS;
-  
-  // 写入文件
-  const outputPath = path.join(distDir, 'douyin_ui_customizer.user.js');
-  fs.writeFileSync(outputPath, finalScript, 'utf8');
-  
-  console.log(`构建完成！输出文件：${outputPath}`);
+  try {
+    // 读取所有JS文件
+    const mainJS = readFile(path.join(__dirname, 'src', 'main.js'));
+    const configJS = readFile(path.join(__dirname, 'src', 'config.js'));
+    const uiManagerJS = readFile(path.join(__dirname, 'src', 'ui_manager.js'));
+    const domUtilsJS = readFile(path.join(__dirname, 'src', 'utils', 'dom.js'));
+    const storageUtilsJS = readFile(path.join(__dirname, 'src', 'utils', 'storage.js'));
+    
+    // 读取CSS文件
+    const defaultCSS = readFile(path.join(__dirname, 'src', 'styles', 'default.css'));
+    const darkCSS = readFile(path.join(__dirname, 'src', 'styles', 'dark.css'));
+    
+    // 最安全的代码合并方式：使用简单字符串连接，避免任何可能引入语法错误的处理
+    let combinedJS = "";
+    
+    // 1. CSS样式定义
+    combinedJS += "// CSS样式定义\n";
+    combinedJS += "const defaultStyles = " + JSON.stringify(defaultCSS) + ";\n";
+    combinedJS += "const darkStyles = " + JSON.stringify(darkCSS) + ";\n";
+    combinedJS += "\n";
+    
+    // 2. 工具函数模块
+    combinedJS += "// 工具函数模块\n";
+    combinedJS += domUtilsJS;
+    combinedJS += "\n\n";
+    
+    // 3. 存储工具模块
+    combinedJS += "// 存储工具模块\n";
+    combinedJS += storageUtilsJS;
+    combinedJS += "\n\n";
+    
+    // 4. 配置管理模块
+    combinedJS += "// 配置管理模块\n";
+    combinedJS += configJS;
+    combinedJS += "\n\n";
+    
+    // 5. UI管理器模块
+    combinedJS += "// UI管理器模块\n";
+    combinedJS += uiManagerJS;
+    combinedJS += "\n\n";
+    
+    // 6. 主脚本逻辑
+    combinedJS += "// 主脚本逻辑\n";
+    combinedJS += mainJS;
+    
+    // 生成最终脚本，使用简单的字符串连接
+    const header = generateUserscriptHeader();
+    const finalScript = header + "\n\n" + combinedJS;
+    
+    // 写入文件
+    const outputPath = path.join(distDir, 'douyin_ui_customizer.user.js');
+    fs.writeFileSync(outputPath, finalScript, 'utf8');
+    
+    console.log(`构建完成！输出文件：${outputPath}`);
+  } catch (error) {
+    console.error('构建过程中发生错误:', error);
+    process.exit(1);
+  }
 }
 
 // 执行构建
