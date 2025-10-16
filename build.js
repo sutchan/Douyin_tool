@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { minify } = require('terser');
 
 // 创建输出目录
 const distDir = path.join(__dirname, 'dist');
@@ -59,17 +58,9 @@ function readFile(filePath) {
   }
 }
 
-// 简化的代码处理函数，直接返回代码而不进行复杂处理
-async function compressJS(jsCode) {
-  try {
-    // 最小化处理，避免引入语法错误
-    console.log('直接使用原始代码结构，避免处理过程中引入语法错误');
-    return jsCode;
-  } catch (error) {
-    console.error('代码处理错误:', error);
-    console.log('返回原始代码');
-    return jsCode;
-  }
+// 代码处理函数，直接返回原始代码
+function processJS(jsCode) {
+  return jsCode;
 }
 
 // 构建脚本
