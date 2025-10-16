@@ -99,10 +99,23 @@ async function build() {
     const defaultStyles = \`${defaultCSS.replace(/`/g, '\\`')}\`;
     const darkStyles = \`${darkCSS.replace(/`/g, '\\`')}\`;
     
-    // 工具函数
+    // 工具函数和基础模块
     ${domUtilsJS}
     ${storageUtilsJS}
     ${configJS}
+    
+    // 定义页面检测函数（提取自main.js，确保在UIManager前可用）
+    function isVideoPage() {
+      return location.pathname.includes('/video/') || 
+             location.pathname === '/' || 
+             location.pathname.includes('/user/');
+    }
+    
+    function isLivePage() {
+      return location.pathname.includes('/live/');
+    }
+    
+    // 加载UI管理器和主脚本
     ${uiManagerJS}
     ${mainJS}
   `;
