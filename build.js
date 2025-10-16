@@ -125,10 +125,12 @@ async function build() {
     combinedJS += "// UI管理器模块\n";
     combinedJS += uiManagerJS.replace(/\s*$/, '') + safeSeparator;
     
-    // 6. 主脚本逻辑
+    // 6. 主脚本逻辑 - 替换CURRENT_VERSION为更新后的版本号
     console.log('合并主脚本逻辑...');
     combinedJS += "// 主脚本逻辑\n";
-    combinedJS += mainJS.replace(/\s*$/, '');
+    // 更新main.js中的版本号以匹配package.json
+    const updatedMainJS = mainJS.replace(/const CURRENT_VERSION = '[^']+'/, `const CURRENT_VERSION = '${pkg.version}'`);
+    combinedJS += updatedMainJS.replace(/\s*$/, '');
     
     console.log('代码合并完成！');
     
