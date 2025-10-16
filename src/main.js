@@ -1,11 +1,11 @@
 /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
- * 版本：1.0.12
+ * 版本：1.0.5
  */
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.12';
+const CURRENT_VERSION = '1.0.5';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
@@ -105,7 +105,10 @@ function init() {
   // 注册油猴菜单命令
   registerMenuCommands(uiManager);
   
-  // 自动更新功能已关闭
+  // 检查是否需要进行自动更新检查
+  if (shouldCheckForUpdates()) {
+    checkForUpdates(false);
+  }
 }
 
 /**
@@ -255,76 +258,10 @@ function isLivePage() {
 }
 
 /**
- * 创建浮动设置按钮
- * @param {UIManager} uiManager - UI管理器实例
- */
-function createFloatingSettingsButton(uiManager) {
-  // 检查按钮是否已存在
-  let settingsButton = document.getElementById('douyin-ui-customizer-settings-btn');
-  if (settingsButton) {
-    settingsButton.remove();
-  }
-  
-  // 创建设置按钮
-  settingsButton = document.createElement('div');
-  settingsButton.id = 'douyin-ui-customizer-settings-btn';
-  settingsButton.innerHTML = '⚙️';
-  settingsButton.title = '抖音UI定制设置';
-  
-  // 设置按钮样式
-  Object.assign(settingsButton.style, {
-    position: 'fixed',
-    right: '20px',
-    bottom: '80px',
-    width: '50px',
-    height: '50px',
-    borderRadius: '50%',
-    backgroundColor: '#000000',
-    color: '#ffffff',
-    fontSize: '24px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    zIndex: '99999',
-    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
-    transition: 'all 0.3s ease'
-  });
-  
-  // 添加点击事件
-  settingsButton.addEventListener('click', () => {
-    uiManager.showSettingsPanel();
-  });
-  
-  // 添加悬停效果
-  settingsButton.addEventListener('mouseenter', () => {
-    settingsButton.style.transform = 'scale(1.1)';
-  });
-  
-  settingsButton.addEventListener('mouseleave', () => {
-    settingsButton.style.transform = 'scale(1)';
-  });
-  
-  // 添加到页面
-  document.body.appendChild(settingsButton);
-  
-  // 定期检查按钮是否被移除
-  setInterval(() => {
-    const btn = document.getElementById('douyin-ui-customizer-settings-btn');
-    if (!btn) {
-      createFloatingSettingsButton(uiManager);
-    }
-  }, 10000); // 每10秒检查一次
-}
-
-/**
  * 注册油猴菜单命令
  * @param {UIManager} uiManager - UI管理器实例
  */
 function registerMenuCommands(uiManager) {
-  // 创建浮动设置按钮
-  createFloatingSettingsButton(uiManager);
-  
   // 打开设置面板
   GM_registerMenuCommand('打开设置面板', () => {
     uiManager.showSettingsPanel();
@@ -338,7 +275,10 @@ function registerMenuCommands(uiManager) {
     injectStyles(config.theme);
   });
   
-  // 更新功能已关闭
+  // 手动检查更新
+  GM_registerMenuCommand('检查更新', () => {
+    checkForUpdates(true);
+  });
   
   // 重置设置
   GM_registerMenuCommand('重置所有设置', () => {

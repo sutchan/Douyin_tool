@@ -1,10 +1,6 @@
 {
   "name": "douyin-ui-customizer",
-<<<<<<< HEAD
-  "version": "1.0.12",
-=======
-  "version": "1.0.4",
->>>>>>> parent of 4471753 (V1.0.5)
+  "version": "1.0.5",
   "description": "抖音Web端界面UI定制工具",
   "main": "src/main.js",
   "scripts": {
