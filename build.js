@@ -85,8 +85,18 @@ async function build() {
     // 最安全的代码合并方式：使用简单字符串连接，避免任何可能引入语法错误的处理
     let combinedJS = "";
     
-    // 添加分号和换行作为安全分隔符，确保模块间正确分隔
-    const safeSeparator = ";\n\n// 模块分隔符\n\n";    
+    // 改进的安全模块合并方式
+    function safeAppendModule(code, moduleContent) {
+      // 确保代码块以分号结束，避免模块间语法错误
+      let safeContent = moduleContent.trim();
+      // 如果最后一个非空白字符不是分号或大括号，添加分号
+      const lastNonWhitespace = safeContent.replace(/\s+$/, '');
+      const lastChar = lastNonWhitespace.charAt(lastNonWhitespace.length - 1);
+      if (lastChar !== ';' && lastChar !== '}' && lastChar !== ']') {
+        safeContent += ';';
+      }
+      return code + safeContent + '\n\n// 模块分隔符\n\n';
+    }
     
     console.log('开始合并代码...');
     
@@ -94,27 +104,27 @@ async function build() {
     console.log('合并CSS样式定义...');
     combinedJS += "// CSS样式定义\n";
     combinedJS += "const defaultStyles = " + JSON.stringify(defaultCSS) + ";\n";
-    combinedJS += "const darkStyles = " + JSON.stringify(darkCSS) + ";" + safeSeparator;
+    combinedJS += "const darkStyles = " + JSON.stringify(darkCSS) + ";\n\n";
     
     // 2. 工具函数模块
     console.log('合并工具函数模块...');
     combinedJS += "// 工具函数模块\n";
-    combinedJS += domUtilsJS.replace(/\s*$/, '') + safeSeparator;
+    combinedJS = safeAppendModule(combinedJS, domUtilsJS);
     
     // 3. 存储工具模块
     console.log('合并存储工具模块...');
     combinedJS += "// 存储工具模块\n";
-    combinedJS += storageUtilsJS.replace(/\s*$/, '') + safeSeparator;
+    combinedJS = safeAppendModule(combinedJS, storageUtilsJS);
     
     // 4. 配置管理模块
     console.log('合并配置管理模块...');
     combinedJS += "// 配置管理模块\n";
-    combinedJS += configJS.replace(/\s*$/, '') + safeSeparator;
+    combinedJS = safeAppendModule(combinedJS, configJS);
     
     // 5. UI管理器模块
     console.log('合并UI管理器模块...');
     combinedJS += "// UI管理器模块\n";
-    combinedJS += uiManagerJS.replace(/\s*$/, '') + safeSeparator;
+    combinedJS = safeAppendModule(combinedJS, uiManagerJS);
     
     // 6. 主脚本逻辑 - 只合并main.js中油猴元数据之后的内容
     console.log('合并主脚本逻辑...');
