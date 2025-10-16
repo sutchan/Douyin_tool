@@ -32,8 +32,8 @@
 1. 确保已安装油猴浏览器扩展：
    - Chrome/Edge: [Tampermonkey](https://www.tampermonkey.net/)
    - Firefox: [Greasemonkey](https://addons.mozilla.org/zh-CN/firefox/addon/greasemonkey/)
-2. 点击以下链接：
-   `https://www.tampermonkey.net/script_installation.php#url=https://github.com/SutChan/douyin_tool/raw/main/dist/douyin_ui_customizer.user.js`
+2. 点击以下按钮：
+   <a href="https://www.tampermonkey.net/script_installation.php#url=https://github.com/SutChan/douyin_tool/raw/main/dist/douyin_ui_customizer.user.js" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-align: center; text-decoration: none; font-size: 16px; border-radius: 5px; margin: 10px 0; font-weight: bold;">🔄 一键安装脚本 🔄</a>
 3. 油猴扩展会自动弹出安装确认窗口，点击安装即可
 
 ### 方法二：本地一键导入（适合本地开发）
