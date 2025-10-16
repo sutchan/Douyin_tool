@@ -1,0 +1,294 @@
+/**
+ * 抖音UI定制工具 - 默认样式
+ */
+
+/* 设置面板样式 */
+.douyin-ui-customizer-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 999999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.douyin-ui-customizer-panel .panel-header {
+  padding: 20px;
+  background: #000000;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.douyin-ui-customizer-panel .panel-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.douyin-ui-customizer-panel .close-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.douyin-ui-customizer-panel .close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.douyin-ui-customizer-panel .panel-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.douyin-ui-customizer-panel .settings-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 10px;
+}
+
+.douyin-ui-customizer-panel .tab-btn {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.douyin-ui-customizer-panel .tab-btn:hover {
+  background: #e8e8e8;
+}
+
+.douyin-ui-customizer-panel .tab-btn.active {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.douyin-ui-customizer-panel .tab-content {
+  display: none;
+}
+
+.douyin-ui-customizer-panel .tab-content.active {
+  display: block;
+}
+
+.douyin-ui-customizer-panel .setting-group {
+  margin-bottom: 25px;
+  padding: 15px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.douyin-ui-customizer-panel .setting-group h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.douyin-ui-customizer-panel label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555555;
+  transition: color 0.2s;
+}
+
+.douyin-ui-customizer-panel label:hover {
+  color: #000000;
+}
+
+.douyin-ui-customizer-panel input[type="checkbox"],
+.douyin-ui-customizer-panel input[type="radio"] {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+}
+
+.douyin-ui-customizer-panel input[type="number"],
+.douyin-ui-customizer-panel input[type="text"],
+.douyin-ui-customizer-panel select {
+  margin-left: 8px;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.douyin-ui-customizer-panel input[type="range"] {
+  margin-left: 8px;
+  margin-right: 8px;
+  flex: 1;
+}
+
+.douyin-ui-customizer-panel input[type="color"] {
+  margin-left: 8px;
+  width: 40px;
+  height: 30px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.douyin-ui-customizer-panel .panel-footer {
+  padding: 20px;
+  background: #f8f8f8;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.douyin-ui-customizer-panel .save-btn,
+.douyin-ui-customizer-panel .reset-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.douyin-ui-customizer-panel .save-btn {
+  background: #000000;
+  color: #ffffff;
+}
+
+.douyin-ui-customizer-panel .save-btn:hover {
+  background: #333333;
+}
+
+.douyin-ui-customizer-panel .reset-btn {
+  background: #ffffff;
+  color: #666666;
+  border: 1px solid #ddd;
+}
+
+.douyin-ui-customizer-panel .reset-btn:hover {
+  background: #f0f0f0;
+  color: #333333;
+}
+
+.douyin-ui-customizer-panel button#exportBtn,
+.douyin-ui-customizer-panel button#importBtn {
+  padding: 8px 16px;
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 10px;
+  transition: background-color 0.2s;
+}
+
+.douyin-ui-customizer-panel button#exportBtn:hover,
+.douyin-ui-customizer-panel button#importBtn:hover {
+  background: #333333;
+}
+
+.douyin-ui-customizer-panel input[type="file"] {
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.douyin-ui-customizer-panel p {
+  font-size: 13px;
+  color: #777777;
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+/* 工具提示样式 */
+.douyin-ui-customizer-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 999999;
+  white-space: nowrap;
+}
+
+/* 滚动条样式 */
+.douyin-ui-customizer-panel ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.douyin-ui-customizer-panel ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.douyin-ui-customizer-panel ::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.douyin-ui-customizer-panel ::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+  .douyin-ui-customizer-panel {
+    width: 95%;
+    max-width: none;
+    margin: 10px;
+    top: 10px;
+    left: 10px;
+    transform: none;
+    max-height: calc(100vh - 20px);
+  }
+  
+  .douyin-ui-customizer-panel .settings-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .douyin-ui-customizer-panel .panel-footer {
+    flex-direction: column;
+  }
+  
+  .douyin-ui-customizer-panel .save-btn,
+  .douyin-ui-customizer-panel .reset-btn {
+    width: 100%;
+  }
+}
