@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抖音UI定制工具 - 一键安装</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .install-button {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .install-button:hover {
+            background: #333;
+        }
+        .install-button:active {
+            transform: translateY(1px);
+        }
+        .note {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #000;
+            text-align: left;
+        }
+        .note h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .note ul {
+            padding-left: 20px;
+            color: #666;
+        }
+        .version-info {
+            margin-top: 20px;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>抖音UI定制工具</h1>
+        <p>一键安装脚本到油猴扩展</p>
+        <button id="installBtn" class="install-button">一键导入到油猴</button>
+        
+        <div class="note">
+            <h3>安装说明：</h3>
+            <ul>
+                <li>请确保已安装油猴浏览器扩展（Tampermonkey或Greasemonkey）</li>
+                <li>点击上方按钮后，油猴扩展会自动弹出安装确认窗口</li>
+                <li>在弹出窗口中点击"安装"或"确认"按钮完成安装</li>
+                <li>安装完成后，访问抖音网站即可使用该工具</li>
+            </ul>
+        </div>
+        
+        <div class="version-info">
+            版本：1.0.0 | 作者：SutChan
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('installBtn').addEventListener('click', function() {
+            // 读取本地脚本文件并创建data URL
+            fetch('dist/douyin_ui_customizer.user.js')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('无法加载脚本文件，请确保已运行 npm run build');
+                    }
+                    return response.text();
+                })
+                .then(scriptContent => {
+                    // 创建data URL
+                    const blob = new Blob([scriptContent], { type: 'text/javascript' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    // 创建油猴导入链接并点击
+                    const userscriptUrl = `javascript:void((function(){const script=document.createElement('script');script.src='${url}?v='+Math.random();document.body.appendChild(script);})())`;
+                    
+                    // 对于Chrome和其他现代浏览器，直接打开userscript协议
+                    if (window.location.protocol === 'file:') {
+                        // 在本地文件中，我们需要先提示用户
+                        alert('即将打开油猴安装页面，请在弹出的窗口中点击安装。');
+                        // 创建一个临时链接并点击它
+                        const link = document.createElement('a');
+                        link.href = `data:text/plain;base64,${btoa(scriptContent)}`;
+                        link.download = 'douyin_ui_customizer.user.js';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        setTimeout(() => {
+                            alert('文件已下载，请在下载完成后将文件拖入浏览器以安装到油猴。');
+                        }, 1000);
+                    } else {
+                        window.location.href = `data:text/plain;base64,${btoa(scriptContent)}`;
+                    }
+                })
+                .catch(error => {
+                    alert('安装失败：' + error.message);
+                    console.error('安装错误：', error);
+                });
+        });
+    </script>
+</body>
+</html>
