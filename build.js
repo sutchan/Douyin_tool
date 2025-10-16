@@ -27,8 +27,6 @@ function generateUserscriptHeader() {
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
 // @grant        GM_xmlhttpRequest
-// @updateURL    https://github.com/SutChan/douyin_tool/raw/main/dist/douyin_ui_customizer.user.js
-// @downloadURL  https://github.com/SutChan/douyin_tool/raw/main/dist/douyin_ui_customizer.user.js
 // @license      ${pkg.license}
 // ==/UserScript==
 /* eslint-disable */
