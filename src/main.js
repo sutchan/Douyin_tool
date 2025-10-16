@@ -105,7 +105,10 @@ function init() {
   // 注册油猴菜单命令
   registerMenuCommands(uiManager);
   
-  // 自动更新功能已关闭
+  // 检查是否需要进行自动更新检查
+  if (shouldCheckForUpdates()) {
+    checkForUpdates(false);
+  }
 }
 
 /**
@@ -272,7 +275,10 @@ function registerMenuCommands(uiManager) {
     injectStyles(config.theme);
   });
   
-  // 更新功能已关闭
+  // 手动检查更新
+  GM_registerMenuCommand('检查更新', () => {
+    checkForUpdates(true);
+  });
   
   // 重置设置
   GM_registerMenuCommand('重置所有设置', () => {
