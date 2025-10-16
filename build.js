@@ -62,18 +62,21 @@ function readFile(filePath) {
 // 压缩JavaScript
 async function compressJS(jsCode) {
   try {
+    // 使用更宽松的压缩选项，避免处理ES6+语法时出错
     const result = await minify(jsCode, {
-      compress: {
-        drop_console: false,
-        drop_debugger: true
-      },
+      compress: false, // 禁用压缩，只进行代码格式化
+      mangle: false,   // 禁用变量名混淆
       format: {
-        comments: false
-      }
+        comments: false,
+        beautify: false // 不美化输出，保持紧凑
+      },
+      ecma: 5 // 指定使用ES5兼容性
     });
     return result.code || jsCode;
   } catch (error) {
     console.error('JS compression error:', error);
+    console.log('返回未压缩的代码');
+    // 即使压缩失败，也返回原始代码
     return jsCode;
   }
 }
