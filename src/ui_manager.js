@@ -63,8 +63,8 @@ class UIManager {
     
     const { liveUI } = this.config;
     
-    // 隐藏/显示礼物
-    this.toggleElement('.gift-animation, .gift-container', liveUI.showGifts);
+    // 隐藏/显示礼物（添加更多可能的礼物相关选择器）
+    this.toggleElement('.gift-animation, .gift-container, .gift-item, .gift-area, .gift-panel, .gift-button, .gift-box, .gift-effect', liveUI.showGifts);
     
     // 隐藏/显示弹幕
     this.toggleElement('.danmaku-container', liveUI.showDanmaku);
