@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.69
+// @version      1.0.71
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -1427,10 +1427,10 @@ class UIManager {
         // 显示保存成功提示
         this.showNotification('设置已成功保存并应用！', 'success');
         
-        // 延迟关闭设置面板
+        // 延迟关闭设置面板，给用户时间看到提示
         setTimeout(() => {
           panel.remove();
-        }, 300);
+        }, 1000);
       }, 100);
     } catch (error) {
       console.error('保存设置失败:', error);
@@ -1445,14 +1445,14 @@ class UIManager {
 /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
- * 版本：1.0.68
+ * 版本：1.0.70
  */
 
 // 导入工具函数
 
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.69';
+const CURRENT_VERSION = '1.0.71';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
