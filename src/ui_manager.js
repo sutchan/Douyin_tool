@@ -17,14 +17,26 @@ class UIManager {
    * 应用短视频界面定制
    */
   applyVideoCustomizations() {
-    console.log('应用短视频界面定制');
+    console.log('[UI定制] 开始应用短视频界面定制');
     
-    if (!this.config.videoUI) return;
+    if (!this.config.videoUI) {
+      console.log('[UI定制] 警告：videoUI配置缺失');
+      return;
+    }
     
     const { videoUI } = this.config;
+    console.log('[UI定制] 视频UI配置:', JSON.stringify(videoUI));
+    
+    // 确保DOM已准备好
+    if (!document.body) {
+      console.log('[UI定制] 警告：document.body未准备好，延迟应用定制');
+      setTimeout(() => this.applyVideoCustomizations(), 500);
+      return;
+    }
     
     // 隐藏/显示点赞按钮（使用多种策略）
     this.toggleElement(() => {
+      console.log('[UI定制] 查找点赞按钮元素...');
       // 1. 首先尝试通过可能的点赞图标查找
       const heartIcons = this.findElementsByStructure({
         tagName: 'svg',
@@ -32,12 +44,18 @@ class UIManager {
       });
       
       if (heartIcons.length > 0) {
+        console.log(`[UI定制] 找到 ${heartIcons.length} 个可能的点赞图标`);
         // 找到包含点赞图标的元素，返回其父元素
-        return heartIcons.map(icon => icon.closest('div') || icon);
+        const elements = heartIcons.map(icon => icon.closest('div') || icon);
+        console.log(`[UI定制] 获取到 ${elements.length} 个点赞相关元素`);
+        return elements;
       }
       
       // 2. 通过类名模式匹配
-      return this.findElementsByClassPattern(/like|heart/i);
+      console.log('[UI定制] 尝试通过类名模式匹配点赞按钮');
+      const classElements = this.findElementsByClassPattern(/like|heart|favorite/i);
+      console.log(`[UI定制] 通过类名找到 ${classElements.length} 个可能的点赞元素`);
+      return classElements;
     }, videoUI.showLikeButton);
     
     // 隐藏/显示评论按钮

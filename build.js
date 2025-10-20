@@ -86,6 +86,12 @@ function generateUserscriptHeader() {
 // @author       ${pkg.author}
 // @match        https://www.douyin.com/*
 // @match        https://*.douyin.com/*
+// @match        http://www.douyin.com/*
+// @match        http://*.douyin.com/*
+// @match        https://www.tiktok.com/*
+// @match        https://*.tiktok.com/*
+// @match        http://www.tiktok.com/*
+// @match        http://*.tiktok.com/*
 // @icon         https://www.douyin.com/favicon.ico
 // @grant        GM_addStyle
 // @grant        GM_getValue

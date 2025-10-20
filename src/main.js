@@ -237,34 +237,76 @@ function generateCustomStyles() {
  * @param {UIManager} uiManager - UI管理器实例
  */
 function observePageChanges(uiManager) {
-  // 使用MutationObserver监听DOM变化
-  const observer = new MutationObserver((mutations) => {
+  console.log('开始监听页面变化...');
+  
+  // 防抖函数，避免频繁触发UI更新
+  const debouncedApplyCustomizations = debounce(() => {
+    console.log('应用UI定制...');
     // 检查是否是短视频页面
     if (isVideoPage()) {
+      console.log('检测到短视频页面，应用视频定制');
       uiManager.applyVideoCustomizations();
     }
     
     // 检查是否是直播间页面
     if (isLivePage()) {
+      console.log('检测到直播间页面，应用直播定制');
       uiManager.applyLiveCustomizations();
+    }
+  }, 300);
+  
+  // 使用MutationObserver监听DOM变化
+  const observer = new MutationObserver((mutations) => {
+    // 检查是否有重要的DOM变化
+    let hasSignificantChange = false;
+    
+    for (const mutation of mutations) {
+      // 检查是否有新节点添加
+      if (mutation.addedNodes.length > 0) {
+        // 检查是否添加了视频容器、内容区域等重要元素
+        const addedElements = Array.from(mutation.addedNodes).filter(node => node.nodeType === 1);
+        for (const element of addedElements) {
+          // 检查是否包含重要元素或类名
+          if (element.querySelector('[class*="video"],[class*="content"],[class*="main"],[id*="video"]') || 
+              element.className && (element.className.includes('video') || 
+                                   element.className.includes('content') || 
+                                   element.className.includes('main'))) {
+            hasSignificantChange = true;
+            break;
+          }
+        }
+      }
+      
+      if (hasSignificantChange) break;
+    }
+    
+    // 如果有重要变化，应用定制
+    if (hasSignificantChange) {
+      debouncedApplyCustomizations();
     }
   });
   
-  // 开始观察
-  observer.observe(document.body, {
+  // 更激进的观察配置
+  observer.observe(document.documentElement, {
     childList: true,
-    subtree: true
+    subtree: true,
+    attributes: true,  // 监听属性变化，包括class变化
+    characterData: true  // 监听文本内容变化
   });
   
-  // 初始应用
-  setTimeout(() => {
-    if (isVideoPage()) {
-      uiManager.applyVideoCustomizations();
-    }
-    if (isLivePage()) {
-      uiManager.applyLiveCustomizations();
-    }
-  }, 1000);
+  // 初始应用，使用多次应用策略确保效果
+  const initialApplyDelay = [500, 2000, 5000];
+  initialApplyDelay.forEach((delay, index) => {
+    setTimeout(() => {
+      console.log(`初始应用UI定制 (尝试 ${index + 1}/${initialApplyDelay.length})`);
+      if (isVideoPage()) {
+        uiManager.applyVideoCustomizations();
+      }
+      if (isLivePage()) {
+        uiManager.applyLiveCustomizations();
+      }
+    }, delay);
+  });
 }
 
 /**
@@ -383,9 +425,38 @@ GM_registerMenuCommand('重置所有设置', () => {
   }
 });
 
-// 当页面加载完成后初始化
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
+// 增强的初始化逻辑，确保脚本在各种情况下都能正确执行
+function ensureInit() {
+  // 尝试直接初始化
+  try {
+    init();
+  } catch (error) {
+    console.error('初始化失败，将重试:', error);
+    // 如果初始化失败，500ms后重试
+    setTimeout(init, 500);
+  }
 }
+
+// 使用多种方式确保初始化执行
+// 1. 传统DOMContentLoaded事件监听
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', ensureInit);
+} 
+
+// 2. 立即尝试初始化（如果文档已加载）
+if (document.readyState !== 'loading') {
+  setTimeout(ensureInit, 0); // 使用setTimeout确保在当前事件循环后执行
+}
+
+// 3. 添加延迟初始化作为后备方案
+setTimeout(ensureInit, 1000);
+
+// 4. 监听页面变化，确保SPA路由变化时也能初始化
+let lastHref = location.href;
+setInterval(() => {
+  if (location.href !== lastHref) {
+    lastHref = location.href;
+    console.log('检测到页面URL变化，重新应用UI定制');
+    ensureInit();
+  }
+}, 1000);
