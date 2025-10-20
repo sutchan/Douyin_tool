@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.67
+// @version      1.0.69
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -960,8 +960,7 @@ class UIManager {
     // 初始化导入导出功能
     this.initImportExport(panel);
     
-    // 添加拖动功能
-    this.makePanelDraggable(panel);
+    // 取消拖动功能
   }
   
   /**
@@ -1446,14 +1445,14 @@ class UIManager {
 /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
- * 版本：1.0.66
+ * 版本：1.0.68
  */
 
 // 导入工具函数
 
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.67';
+const CURRENT_VERSION = '1.0.69';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 

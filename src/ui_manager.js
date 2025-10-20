@@ -706,8 +706,7 @@ class UIManager {
     // 初始化导入导出功能
     this.initImportExport(panel);
     
-    // 添加拖动功能
-    this.makePanelDraggable(panel);
+    // 取消拖动功能
   }
   
   /**
