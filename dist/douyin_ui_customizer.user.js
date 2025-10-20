@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.65
+// @version      1.0.66
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -433,28 +433,61 @@ class UIManager {
     
     const { liveUI } = this.config;
     
-    // 隐藏/显示礼物（添加更多可能的礼物相关选择器）
+    // 隐藏/显示礼物（增强礼物识别能力）
     this.toggleElement(() => {
-      // 查找动画元素，可能是礼物特效
-      const animatedElements = this.findElementsByStructure({
-        attributes: { class: /animation|effect|gift/i }
+      console.log('[UI定制] 开始查找礼物元素...');
+      
+      // 1. 组合所有可能的礼物相关元素
+      let giftElements = [];
+      
+      // 通过类名模式匹配多种礼物相关元素
+      giftElements = giftElements.concat(
+        this.findElementsByClassPattern(/gift|present|reward|award|effect|animation|特效|礼物|打赏|赠送|连击|连击奖励|豪华礼物|礼物特效|礼物动画|送礼物|礼物展示/i)
+      );
+      
+      // 通过属性和结构特征查找
+      giftElements = giftElements.concat(
+        this.findElementsByStructure({
+          attributes: {
+            class: /gift|present|reward|award|effect|animation/i
+          }
+        })
+      );
+      
+      // 查找可能是礼物动画的元素
+      const animatedElements = document.body.querySelectorAll('div');
+      const potentialGiftAnims = Array.from(animatedElements).filter(el => {
+        const style = window.getComputedStyle(el);
+        // 礼物通常有动画效果、较高的z-index、绝对定位
+        return (style.animationName !== 'none' || 
+                style.transitionProperty.includes('transform') ||
+                style.transform !== 'none') && 
+               parseInt(style.zIndex) > 100 &&
+               style.position !== 'static';
       });
       
-      if (animatedElements.length > 0) {
-        return animatedElements;
+      giftElements = giftElements.concat(potentialGiftAnims);
+      
+      // 查找包含特定文字的礼物元素
+      const textGiftElements = this.findElementsByStructure({
+        text: /礼物|特效|打赏|赠送|连击|连击奖励|豪华礼物/i
+      });
+      
+      // 收集这些元素及其父容器
+      if (textGiftElements.length > 0) {
+        textGiftElements.forEach(el => {
+          giftElements.push(el);
+          giftElements.push(el.closest('div') || el);
+          giftElements.push(el.closest('.gift-container') || el);
+          giftElements.push(el.closest('.animation-container') || el);
+        });
       }
       
-      // 查找可能包含礼物的容器
-      const giftContainers = document.body.querySelectorAll('div');
-      const potentialGifts = Array.from(giftContainers).filter(el => {
-        // 礼物通常有特定的动画样式
-        const style = window.getComputedStyle(el);
-        return style.animationName !== 'none' || 
-               style.transform !== 'none';
-      });
+      // 去重
+      giftElements = [...new Set(giftElements)];
       
-      return potentialGifts.length > 0 ? potentialGifts : 
-             this.findElementsByClassPattern(/gift|present|reward/i);
+      console.log(`[UI定制] 找到 ${giftElements.length} 个礼物相关元素`);
+      return giftElements;
     }, liveUI.showGifts);
     
     // 隐藏/显示弹幕
@@ -1420,7 +1453,7 @@ class UIManager {
 
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.65';
+const CURRENT_VERSION = '1.0.66';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
@@ -1605,9 +1638,34 @@ function generateCustomStyles() {
   
   // 直播间界面定制样式
   if (config.liveUI) {
-    // 隐藏礼物动画
+    // 隐藏礼物动画和相关元素（增强版，覆盖更多礼物元素）
     if (!config.liveUI.showGifts) {
-      customCSS += '.gift-animation, .gift-container { display: none !important; }';
+      customCSS += `
+        /* 礼物核心元素 */
+        .gift-animation, .gift-container, .gift-effect, .gift-display,
+        .present-animation, .reward-container, .award-animation,
+        .animation-container, .live-gift, .live-gift-animation,
+        /* 抖音常用礼物类名 */
+        [class*="gift"], [class*="present"], [class*="reward"],
+        [class*="award"], [class*="effect"], [class*="animation"],
+        [class*="特效"], [class*="礼物"], [class*="打赏"],
+        [class*="连击"], [class*="豪华礼物"], [class*="礼物特效"],
+        /* 礼物按钮和面板 */
+        .gift-panel, .gift-button, .send-gift-button,
+        /* 礼物动画容器 */
+        [style*="animation:"], [style*="transition:"], 
+        /* 高z-index可能是礼物的元素 */
+        [style*="z-index:"][style*="z-index: 1"],[style*="z-index: 2"],
+        [style*="z-index: 3"],[style*="z-index: 4"],[style*="z-index: 5"] {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          width: 0 !important;
+          height: 0 !important;
+          pointer-events: none !important;
+          z-index: -1 !important;
+        }
+      `;
     }
     
     // 隐藏推荐和广告

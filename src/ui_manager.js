@@ -179,28 +179,61 @@ class UIManager {
     
     const { liveUI } = this.config;
     
-    // 隐藏/显示礼物（添加更多可能的礼物相关选择器）
+    // 隐藏/显示礼物（增强礼物识别能力）
     this.toggleElement(() => {
-      // 查找动画元素，可能是礼物特效
-      const animatedElements = this.findElementsByStructure({
-        attributes: { class: /animation|effect|gift/i }
+      console.log('[UI定制] 开始查找礼物元素...');
+      
+      // 1. 组合所有可能的礼物相关元素
+      let giftElements = [];
+      
+      // 通过类名模式匹配多种礼物相关元素
+      giftElements = giftElements.concat(
+        this.findElementsByClassPattern(/gift|present|reward|award|effect|animation|特效|礼物|打赏|赠送|连击|连击奖励|豪华礼物|礼物特效|礼物动画|送礼物|礼物展示/i)
+      );
+      
+      // 通过属性和结构特征查找
+      giftElements = giftElements.concat(
+        this.findElementsByStructure({
+          attributes: {
+            class: /gift|present|reward|award|effect|animation/i
+          }
+        })
+      );
+      
+      // 查找可能是礼物动画的元素
+      const animatedElements = document.body.querySelectorAll('div');
+      const potentialGiftAnims = Array.from(animatedElements).filter(el => {
+        const style = window.getComputedStyle(el);
+        // 礼物通常有动画效果、较高的z-index、绝对定位
+        return (style.animationName !== 'none' || 
+                style.transitionProperty.includes('transform') ||
+                style.transform !== 'none') && 
+               parseInt(style.zIndex) > 100 &&
+               style.position !== 'static';
       });
       
-      if (animatedElements.length > 0) {
-        return animatedElements;
+      giftElements = giftElements.concat(potentialGiftAnims);
+      
+      // 查找包含特定文字的礼物元素
+      const textGiftElements = this.findElementsByStructure({
+        text: /礼物|特效|打赏|赠送|连击|连击奖励|豪华礼物/i
+      });
+      
+      // 收集这些元素及其父容器
+      if (textGiftElements.length > 0) {
+        textGiftElements.forEach(el => {
+          giftElements.push(el);
+          giftElements.push(el.closest('div') || el);
+          giftElements.push(el.closest('.gift-container') || el);
+          giftElements.push(el.closest('.animation-container') || el);
+        });
       }
       
-      // 查找可能包含礼物的容器
-      const giftContainers = document.body.querySelectorAll('div');
-      const potentialGifts = Array.from(giftContainers).filter(el => {
-        // 礼物通常有特定的动画样式
-        const style = window.getComputedStyle(el);
-        return style.animationName !== 'none' || 
-               style.transform !== 'none';
-      });
+      // 去重
+      giftElements = [...new Set(giftElements)];
       
-      return potentialGifts.length > 0 ? potentialGifts : 
-             this.findElementsByClassPattern(/gift|present|reward/i);
+      console.log(`[UI定制] 找到 ${giftElements.length} 个礼物相关元素`);
+      return giftElements;
     }, liveUI.showGifts);
     
     // 隐藏/显示弹幕

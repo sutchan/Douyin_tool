@@ -208,9 +208,34 @@ function generateCustomStyles() {
   
   // 直播间界面定制样式
   if (config.liveUI) {
-    // 隐藏礼物动画
+    // 隐藏礼物动画和相关元素（增强版，覆盖更多礼物元素）
     if (!config.liveUI.showGifts) {
-      customCSS += '.gift-animation, .gift-container { display: none !important; }';
+      customCSS += `
+        /* 礼物核心元素 */
+        .gift-animation, .gift-container, .gift-effect, .gift-display,
+        .present-animation, .reward-container, .award-animation,
+        .animation-container, .live-gift, .live-gift-animation,
+        /* 抖音常用礼物类名 */
+        [class*="gift"], [class*="present"], [class*="reward"],
+        [class*="award"], [class*="effect"], [class*="animation"],
+        [class*="特效"], [class*="礼物"], [class*="打赏"],
+        [class*="连击"], [class*="豪华礼物"], [class*="礼物特效"],
+        /* 礼物按钮和面板 */
+        .gift-panel, .gift-button, .send-gift-button,
+        /* 礼物动画容器 */
+        [style*="animation:"], [style*="transition:"], 
+        /* 高z-index可能是礼物的元素 */
+        [style*="z-index:"][style*="z-index: 1"],[style*="z-index: 2"],
+        [style*="z-index: 3"],[style*="z-index: 4"],[style*="z-index: 5"] {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          width: 0 !important;
+          height: 0 !important;
+          pointer-events: none !important;
+          z-index: -1 !important;
+        }
+      `;
     }
     
     // 隐藏推荐和广告
