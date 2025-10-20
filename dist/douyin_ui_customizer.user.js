@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.71
+// @version      1.0.72
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -604,11 +604,27 @@ class UIManager {
     elements.forEach(function(element) {
       if (element && element.style) {
         if (show) {
+          // 显示元素，移除所有隐藏样式
           element.style.display = '';
           element.style.visibility = 'visible';
+          element.style.opacity = '1';
+          element.style.width = '';
+          element.style.height = '';
+          element.style.pointerEvents = '';
+          element.style.zIndex = '';
+          // 同时设置CSS类，用于确保样式优先
+          element.classList.remove('douyin-ui-hidden');
         } else {
-          element.style.display = 'none';
-          element.style.visibility = 'hidden';
+          // 隐藏元素，使用更强大的样式隐藏方式
+          element.style.display = 'none !important';
+          element.style.visibility = 'hidden !important';
+          element.style.opacity = '0 !important';
+          element.style.width = '0 !important';
+          element.style.height = '0 !important';
+          element.style.pointerEvents = 'none !important';
+          element.style.zIndex = '-1 !important';
+          // 添加CSS类作为额外保障
+          element.classList.add('douyin-ui-hidden');
         }
       }
     });
@@ -1445,14 +1461,14 @@ class UIManager {
 /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
- * 版本：1.0.70
+ * 版本：1.0.71
  */
 
 // 导入工具函数
 
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.71';
+const CURRENT_VERSION = '1.0.72';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
@@ -1596,6 +1612,19 @@ function injectStyles(theme) {
 function generateCustomStyles() {
   const config = loadConfig();
   let customCSS = '';
+  
+  // 添加用于隐藏元素的CSS类，确保优先级
+  customCSS += `
+    .douyin-ui-hidden {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      pointer-events: none !important;
+      z-index: -1 !important;
+    }
+  `;
   
   // 短视频界面定制样式
   if (config.videoUI) {

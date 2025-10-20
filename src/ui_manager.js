@@ -350,11 +350,27 @@ class UIManager {
     elements.forEach(function(element) {
       if (element && element.style) {
         if (show) {
+          // 显示元素，移除所有隐藏样式
           element.style.display = '';
           element.style.visibility = 'visible';
+          element.style.opacity = '1';
+          element.style.width = '';
+          element.style.height = '';
+          element.style.pointerEvents = '';
+          element.style.zIndex = '';
+          // 同时设置CSS类，用于确保样式优先
+          element.classList.remove('douyin-ui-hidden');
         } else {
-          element.style.display = 'none';
-          element.style.visibility = 'hidden';
+          // 隐藏元素，使用更强大的样式隐藏方式
+          element.style.display = 'none !important';
+          element.style.visibility = 'hidden !important';
+          element.style.opacity = '0 !important';
+          element.style.width = '0 !important';
+          element.style.height = '0 !important';
+          element.style.pointerEvents = 'none !important';
+          element.style.zIndex = '-1 !important';
+          // 添加CSS类作为额外保障
+          element.classList.add('douyin-ui-hidden');
         }
       }
     });
