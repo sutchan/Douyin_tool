@@ -107,6 +107,14 @@ src/
       ├── dom.js      # DOM操作工具函数
       └── storage.js  # 本地存储工具函数
 dist/                 # 构建输出目录
+docs/                 # 文档目录
+  ├── README.md           # 文档目录说明
+  ├── 6a_workflow_rules.md # 6A工作流规则
+  ├── development_guide.md # 开发指南
+  ├── api_documentation.md # API文档
+  ├── user_guide.md        # 用户指南
+  ├── contributing_guide.md # 贡献指南
+  └── CHANGELOG.md         # 更新日志
 build.js              # 构建脚本（支持自动版本号递增）
 package.json          # 项目配置和依赖
 README.md             # 项目说明文档
@@ -134,6 +142,15 @@ README.md             # 项目说明文档
 3. 修改源代码
 4. 构建脚本：`npm run build`
 5. 测试脚本：在油猴中安装`dist/douyin_ui_customizer.user.js`
+
+### 详细文档
+更多详细文档请查看项目的[docs目录](docs/README.md)，包括：
+
+- [开发指南](docs/development_guide.md) - 详细的开发环境搭建和开发流程说明
+- [API文档](docs/api_documentation.md) - 核心函数和类的使用说明
+- [用户指南](docs/user_guide.md) - 详细的安装、配置和使用指南
+- [贡献指南](docs/contributing_guide.md) - 如何为项目做贡献
+- [更新日志](docs/CHANGELOG.md) - 版本历史和功能变更记录
 
 ## 许可证
 MIT

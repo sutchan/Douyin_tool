@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         抖音网页版UI定制工具
 // @namespace    http://tampermonkey.net/
-// @version 1.0.53
+// @version 1.0.56
 // @description  抖音Web端界面UI定制工具，可自定义短视频和直播间界面
 // @author       SutChan
 // @match        *://*.douyin.com/*
@@ -16,11 +16,14 @@
 /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
- * 版本：1.0.53
+ * 版本：1.0.56
  */
 
+// 导入工具函数
+const { getItem, setItem } = require('./utils/storage.js');
+
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.53';
+const CURRENT_VERSION = '1.0.56';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
@@ -117,8 +120,8 @@ function init() {
   // 监听页面变化
   observePageChanges(uiManager);
   
-  // 注册油猴菜单命令
-  registerMenuCommands(uiManager);
+  // 创建浮动设置按钮
+  createFloatingSettingsButton(uiManager);
   
   // 检查是否需要进行自动更新检查
   if (shouldCheckForUpdates()) {
@@ -340,40 +343,45 @@ function createFloatingSettingsButton(uiManager) {
   }, 5000); // 每5秒检查一次
 }
 
-/**
- * 注册油猴菜单命令
- * @param {UIManager} uiManager - UI管理器实例
- */
-function registerMenuCommands(uiManager) {
-  // 创建浮动设置按钮
-  createFloatingSettingsButton(uiManager);
-  
-  // 打开设置面板
-  GM_registerMenuCommand('打开设置面板', () => {
-    uiManager.showSettingsPanel();
-  });
-  
-  // 切换暗黑模式
-  GM_registerMenuCommand('切换暗黑模式', () => {
+// 定义全局UI管理器实例
+let globalUIManager = null;
+
+// 全局初始化UI管理器函数
+function initUIManager() {
+  if (!globalUIManager) {
     const config = loadConfig();
-    config.theme = config.theme === 'dark' ? 'light' : 'dark';
-    saveConfig(config);
-    injectStyles(config.theme);
-  });
-  
-  // 手动检查更新
-  GM_registerMenuCommand('检查更新', () => {
-    checkForUpdates(true);
-  });
-  
-  // 重置设置
-  GM_registerMenuCommand('重置所有设置', () => {
-    if (confirm('确定要重置所有设置吗？')) {
-      resetConfig();
-      location.reload();
-    }
-  });
+    globalUIManager = new UIManager(config);
+  }
+  return globalUIManager;
 }
+
+// 在脚本顶层注册油猴菜单命令，确保在油猴环境中立即执行
+// 打开设置面板
+GM_registerMenuCommand('打开设置面板', () => {
+  const uiManager = initUIManager();
+  uiManager.showSettingsPanel();
+});
+
+// 切换暗黑模式
+GM_registerMenuCommand('切换暗黑模式', () => {
+  const config = loadConfig();
+  config.theme = config.theme === 'dark' ? 'light' : 'dark';
+  saveConfig(config);
+  injectStyles(config.theme);
+});
+
+// 手动检查更新
+GM_registerMenuCommand('检查更新', () => {
+  checkForUpdates(true);
+});
+
+// 重置所有设置
+GM_registerMenuCommand('重置所有设置', () => {
+  if (confirm('确定要重置所有设置吗？')) {
+    resetConfig();
+    location.reload();
+  }
+});
 
 // 当页面加载完成后初始化
 if (document.readyState === 'loading') {

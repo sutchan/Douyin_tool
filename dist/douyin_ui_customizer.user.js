@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.53
+// @version      1.0.62
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -293,8 +293,8 @@ class UIManager {
         tagName: 'div',
         children: [{
           tagName: 'svg',
-          attributes: { viewBox: '0 0 1024 1024' }
-        }]
+            attributes: { viewBox: '0 0 1024 1024' }
+          }]
       });
       
       if (commentElements.length > 0) {
@@ -320,9 +320,9 @@ class UIManager {
           const text = el.textContent.toLowerCase();
           return text.includes('share') || text.includes('分享');
         });
+      } else {
+        return this.findElementsByClassPattern(/share|forward/i);
       }
-      
-      return this.findElementsByClassPattern(/share|forward/i);
     }, videoUI.showShareButton);
     
     // 隐藏/显示作者信息
@@ -524,9 +524,17 @@ class UIManager {
         console.error('查找元素函数执行失败:', e);
         return;
       }
+    } else if (typeof selectorOrFinder === 'string' && selectorOrFinder.trim() !== '') {
+      // 如果是选择器字符串且不为空，则使用querySelectorAll
+      try {
+        elements = document.querySelectorAll(selectorOrFinder);
+      } catch (e) {
+        console.error('无效的CSS选择器:', selectorOrFinder, e);
+        return;
+      }
     } else {
-      // 如果是选择器字符串，则使用querySelectorAll
-      elements = document.querySelectorAll(selectorOrFinder);
+      console.error('无效的选择器或查找函数参数');
+      return;
     }
     
     // 确保elements是数组
@@ -561,8 +569,15 @@ class UIManager {
       // 通过文本内容查找
       const allElements = document.body.querySelectorAll('*');
       allElements.forEach(el => {
-        if (el.textContent.includes(options.text)) {
-          result.push(el);
+        // 如果是正则表达式，则使用test方法，否则使用includes
+        if (options.text instanceof RegExp) {
+          if (options.text.test(el.textContent)) {
+            result.push(el);
+          }
+        } else {
+          if (el.textContent.includes(options.text)) {
+            result.push(el);
+          }
         }
       });
     }
@@ -607,8 +622,16 @@ class UIManager {
             const child = children[i];
             // 检查子元素的条件
             let childMatch = true;
-            if (childCriteria.text && !child.textContent.includes(childCriteria.text)) {
-              childMatch = false;
+            if (childCriteria.text) {
+              if (childCriteria.text instanceof RegExp) {
+                if (!childCriteria.text.test(child.textContent)) {
+                  childMatch = false;
+                }
+              } else {
+                if (!child.textContent.includes(childCriteria.text)) {
+                  childMatch = false;
+                }
+              }
             }
             
             if (childCriteria.attributes) {
@@ -623,6 +646,7 @@ class UIManager {
             
             if (childMatch) {
               found = true;
+              break;
             }
           }
           
@@ -630,7 +654,7 @@ class UIManager {
             match = false;
             break;
           }
-        });
+        }
         
         if (match) filtered.push(parent);
       });
@@ -826,38 +850,57 @@ class UIManager {
    */
   setupSettingsPanelEvents(panel) {
     // 关闭按钮
-    panel.querySelector('.close-btn').addEventListener('click', () => {
-      panel.remove();
-    });
+    const closeBtn = panel.querySelector('.close-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        panel.remove();
+      });
+    }
     
     // 标签切换
-    panel.querySelectorAll('.tab-btn').forEach(btn => {
+    const tabBtns = panel.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const tabId = btn.getAttribute('data-tab');
+        if (!tabId) return;
         
         // 移除所有活跃状态
-        panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        tabBtns.forEach(b => b.classList.remove('active'));
         panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         
         // 设置当前活跃状态
         btn.classList.add('active');
-        panel.querySelector(`#${tabId}-tab`).classList.add('active');
+        const tabContent = panel.querySelector(`#${tabId}-tab`);
+        if (tabContent) {
+          tabContent.classList.add('active');
+        }
       });
     });
     
     // 保存按钮
-    panel.querySelector('.save-btn').addEventListener('click', () => {
-      this.saveSettings(panel);
-    });
+    const saveBtn = panel.querySelector('.save-btn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        this.saveSettings(panel);
+      });
+    }
     
     // 重置按钮
-    panel.querySelector('.reset-btn').addEventListener('click', () => {
-      if (confirm('确定要重置所有设置吗？')) {
-        this.config = resetConfig();
-        panel.remove();
-        location.reload();
-      }
-    });
+    const resetBtn = panel.querySelector('.reset-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        if (confirm('确定要重置所有设置吗？')) {
+          if (typeof resetConfig === 'function') {
+            this.config = resetConfig();
+          }
+          panel.remove();
+          location.reload();
+        }
+      });
+    }
+    
+    // 初始化导入导出功能
+    this.initImportExport(panel);
     
     // 添加拖动功能
     this.makePanelDraggable(panel);
@@ -869,11 +912,13 @@ class UIManager {
    */
   makePanelDraggable(panel) {
     const header = panel.querySelector('.panel-header');
+    if (!header) return;
+    
     let isDragging = false;
     let offsetX, offsetY;
     
     // 鼠标按下事件
-    header.addEventListener('mousedown', (e) => {
+    const handleMouseDown = (e) => {
       isDragging = true;
       
       // 计算鼠标相对于面板左上角的偏移量
@@ -888,10 +933,10 @@ class UIManager {
       
       // 添加拖拽时的视觉效果
       header.style.cursor = 'grabbing';
-    });
+    };
     
-    // 鼠标移动事件（添加到document以允许鼠标移出面板时仍能拖动）
-    document.addEventListener('mousemove', (e) => {
+    // 鼠标移动事件
+    const handleMouseMove = (e) => {
       if (!isDragging) return;
       
       // 计算新位置
@@ -911,18 +956,24 @@ class UIManager {
       panel.style.top = `${newY}px`;
       panel.style.right = 'auto';
       panel.style.bottom = 'auto';
-    });
+    };
     
     // 鼠标释放事件
-    document.addEventListener('mouseup', () => {
+    const handleMouseUp = () => {
       if (isDragging) {
         isDragging = false;
         header.style.cursor = 'grab';
+        
+        // 移除事件监听器，避免内存泄漏
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
       }
-    });
+    };
     
-    // 初始化光标样式
-    header.style.cursor = 'grab';
+    // 添加事件监听器
+    header.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
     
     // 阻止鼠标按下时的文本选择
     header.addEventListener('selectstart', (e) => {
@@ -1168,58 +1219,125 @@ class UIManager {
   }
 
   /**
+   * 初始化导入导出功能
+   * @param {HTMLElement} panel - 设置面板元素
+   */
+  initImportExport(panel) {
+    // 导出配置
+    const exportBtn = panel.querySelector('#exportBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        try {
+          const configStr = exportConfig();
+          const blob = new Blob([configStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `douyin_ui_customizer_${new Date().toISOString().split('T')[0]}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          this.showNotification('配置导出成功！', 'success');
+        } catch (error) {
+          console.error('导出配置失败:', error);
+          this.showNotification('导出配置失败，请重试', 'error');
+        }
+      });
+    }
+    
+    // 导入配置
+    const importBtn = panel.querySelector('#importBtn');
+    const importFile = panel.querySelector('#importFile');
+    if (importBtn && importFile) {
+      importBtn.addEventListener('click', () => {
+        if (importFile.files.length === 0) {
+          this.showNotification('请先选择要导入的配置文件', 'info');
+          return;
+        }
+        
+        const file = importFile.files[0];
+        if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+          this.showNotification('请选择JSON格式的配置文件', 'error');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const success = importConfig(e.target.result);
+            if (success) {
+              this.showNotification('配置导入成功，正在重新加载...', 'success');
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            } else {
+              this.showNotification('配置导入失败，请检查文件格式', 'error');
+            }
+          } catch (error) {
+            console.error('导入配置失败:', error);
+            this.showNotification('导入配置失败，请检查文件内容', 'error');
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+  }
+  
+  /**
    * 保存设置
    * @param {HTMLElement} panel - 设置面板元素
    */
   saveSettings(panel) {
     try {
       // 保存通用设置
-      this.config.theme = panel.querySelector('input[name="theme"]:checked').value;
+      const themeRadios = panel.querySelectorAll('input[name="theme"]:checked');
+      this.config.theme = themeRadios.length > 0 ? themeRadios[0].value : 'light';
       
       if (!this.config.general) {
         this.config.general = {};
       }
-      this.config.general.autoPlay = panel.querySelector('#autoPlay').checked;
-      this.config.general.autoScroll = panel.querySelector('#autoScroll').checked;
-      this.config.general.keyboardShortcuts = panel.querySelector('#keyboardShortcuts').checked;
-      this.config.general.notifications = panel.querySelector('#notifications').checked;
+      this.config.general.autoPlay = panel.querySelector('#autoPlay')?.checked || false;
+      this.config.general.autoScroll = panel.querySelector('#autoScroll')?.checked || false;
+      this.config.general.keyboardShortcuts = panel.querySelector('#keyboardShortcuts')?.checked || false;
+      this.config.general.notifications = panel.querySelector('#notifications')?.checked || false;
       
       // 保存短视频设置
       if (!this.config.videoUI) {
         this.config.videoUI = {};
       }
-      this.config.videoUI.showLikeButton = panel.querySelector('#showLikeButton').checked;
-      this.config.videoUI.showCommentButton = panel.querySelector('#showCommentButton').checked;
-      this.config.videoUI.showShareButton = panel.querySelector('#showShareButton').checked;
-      this.config.videoUI.showAuthorInfo = panel.querySelector('#showAuthorInfo').checked;
-      this.config.videoUI.showMusicInfo = panel.querySelector('#showMusicInfo').checked;
-      this.config.videoUI.showDescription = panel.querySelector('#showDescription').checked;
-      this.config.videoUI.showRecommendations = panel.querySelector('#showRecommendations').checked;
+      this.config.videoUI.showLikeButton = panel.querySelector('#showLikeButton')?.checked || false;
+      this.config.videoUI.showCommentButton = panel.querySelector('#showCommentButton')?.checked || false;
+      this.config.videoUI.showShareButton = panel.querySelector('#showShareButton')?.checked || false;
+      this.config.videoUI.showAuthorInfo = panel.querySelector('#showAuthorInfo')?.checked || false;
+      this.config.videoUI.showMusicInfo = panel.querySelector('#showMusicInfo')?.checked || false;
+      this.config.videoUI.showDescription = panel.querySelector('#showDescription')?.checked || false;
+      this.config.videoUI.showRecommendations = panel.querySelector('#showRecommendations')?.checked || false;
       
       if (!this.config.videoUI.controlBar) {
         this.config.videoUI.controlBar = {};
       }
-      this.config.videoUI.controlBar.show = panel.querySelector('#controlBarShow').checked;
-      this.config.videoUI.controlBar.autoHide = panel.querySelector('#controlBarAutoHide').checked;
-      this.config.videoUI.controlBar.position = panel.querySelector('#controlBarPosition').value;
+      this.config.videoUI.controlBar.show = panel.querySelector('#controlBarShow')?.checked || false;
+      this.config.videoUI.controlBar.autoHide = panel.querySelector('#controlBarAutoHide')?.checked || false;
+      this.config.videoUI.controlBar.position = panel.querySelector('#controlBarPosition')?.value || 'bottom';
       
       // 保存直播间设置
       if (!this.config.liveUI) {
         this.config.liveUI = {};
       }
-      this.config.liveUI.showGifts = panel.querySelector('#showGifts').checked;
-      this.config.liveUI.showDanmaku = panel.querySelector('#showDanmaku').checked;
-      this.config.liveUI.showRecommendations = panel.querySelector('#showRecommendations').checked;
-      this.config.liveUI.showAds = panel.querySelector('#showAds').checked;
-      this.config.liveUI.showStats = panel.querySelector('#showStats').checked;
+      this.config.liveUI.showGifts = panel.querySelector('#showGifts')?.checked || false;
+      this.config.liveUI.showDanmaku = panel.querySelector('#showDanmaku')?.checked || false;
+      this.config.liveUI.showRecommendations = panel.querySelector('#showRecommendations')?.checked || false;
+      this.config.liveUI.showAds = panel.querySelector('#showAds')?.checked || false;
+      this.config.liveUI.showStats = panel.querySelector('#showStats')?.checked || false;
       
       if (!this.config.liveUI.danmaku) {
         this.config.liveUI.danmaku = {};
       }
-      this.config.liveUI.danmaku.fontSize = parseInt(panel.querySelector('#danmakuFontSize').value);
-      this.config.liveUI.danmaku.color = panel.querySelector('#danmakuColor').value;
-      this.config.liveUI.danmaku.opacity = parseFloat(panel.querySelector('#danmakuOpacity').value);
-      this.config.liveUI.danmaku.speed = panel.querySelector('#danmakuSpeed').value;
+      this.config.liveUI.danmaku.fontSize = parseInt(panel.querySelector('#danmakuFontSize')?.value) || 16;
+      this.config.liveUI.danmaku.color = panel.querySelector('#danmakuColor')?.value || '#FFFFFF';
+      this.config.liveUI.danmaku.opacity = parseFloat(panel.querySelector('#danmakuOpacity')?.value) || 0.8;
+      this.config.liveUI.danmaku.speed = panel.querySelector('#danmakuSpeed')?.value || 'medium';
       
       // 保存配置
       saveConfig(this.config);
@@ -1227,10 +1345,12 @@ class UIManager {
       // 为确保配置完全保存，添加一个小延迟后再应用设置
       setTimeout(() => {
         // 应用新设置
-        injectStyles(this.config.theme);
+        if (typeof injectStyles === 'function') {
+          injectStyles(this.config.theme);
+        }
         
         // 强制重新应用UI定制
-        if (isVideoPage()) {
+        if (typeof isVideoPage === 'function' && isVideoPage()) {
           // 清除现有样式并重新应用
           const customStyle = document.getElementById('douyin-ui-customizer-custom');
           if (customStyle) {
@@ -1238,7 +1358,7 @@ class UIManager {
           }
           this.applyVideoCustomizations();
         }
-        if (isLivePage()) {
+        if (typeof isLivePage === 'function' && isLivePage()) {
           // 清除现有样式并重新应用
           const customStyle = document.getElementById('douyin-ui-customizer-custom');
           if (customStyle) {
@@ -1265,16 +1385,17 @@ class UIManager {
 // 模块分隔符
 
 // 主脚本逻辑
-=
-
 /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
- * 版本：1.0.52
+ * 版本：1.0.56
  */
 
+// 导入工具函数
+
+
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.53';
+const CURRENT_VERSION = '1.0.62';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
@@ -1371,8 +1492,8 @@ function init() {
   // 监听页面变化
   observePageChanges(uiManager);
   
-  // 注册油猴菜单命令
-  registerMenuCommands(uiManager);
+  // 创建浮动设置按钮
+  createFloatingSettingsButton(uiManager);
   
   // 检查是否需要进行自动更新检查
   if (shouldCheckForUpdates()) {
@@ -1594,40 +1715,45 @@ function createFloatingSettingsButton(uiManager) {
   }, 5000); // 每5秒检查一次
 }
 
-/**
- * 注册油猴菜单命令
- * @param {UIManager} uiManager - UI管理器实例
- */
-function registerMenuCommands(uiManager) {
-  // 创建浮动设置按钮
-  createFloatingSettingsButton(uiManager);
-  
-  // 打开设置面板
-  GM_registerMenuCommand('打开设置面板', () => {
-    uiManager.showSettingsPanel();
-  });
-  
-  // 切换暗黑模式
-  GM_registerMenuCommand('切换暗黑模式', () => {
+// 定义全局UI管理器实例
+let globalUIManager = null;
+
+// 全局初始化UI管理器函数
+function initUIManager() {
+  if (!globalUIManager) {
     const config = loadConfig();
-    config.theme = config.theme === 'dark' ? 'light' : 'dark';
-    saveConfig(config);
-    injectStyles(config.theme);
-  });
-  
-  // 手动检查更新
-  GM_registerMenuCommand('检查更新', () => {
-    checkForUpdates(true);
-  });
-  
-  // 重置设置
-  GM_registerMenuCommand('重置所有设置', () => {
-    if (confirm('确定要重置所有设置吗？')) {
-      resetConfig();
-      location.reload();
-    }
-  });
+    globalUIManager = new UIManager(config);
+  }
+  return globalUIManager;
 }
+
+// 在脚本顶层注册油猴菜单命令，确保在油猴环境中立即执行
+// 打开设置面板
+GM_registerMenuCommand('打开设置面板', () => {
+  const uiManager = initUIManager();
+  uiManager.showSettingsPanel();
+});
+
+// 切换暗黑模式
+GM_registerMenuCommand('切换暗黑模式', () => {
+  const config = loadConfig();
+  config.theme = config.theme === 'dark' ? 'light' : 'dark';
+  saveConfig(config);
+  injectStyles(config.theme);
+});
+
+// 手动检查更新
+GM_registerMenuCommand('检查更新', () => {
+  checkForUpdates(true);
+});
+
+// 重置所有设置
+GM_registerMenuCommand('重置所有设置', () => {
+  if (confirm('确定要重置所有设置吗？')) {
+    resetConfig();
+    location.reload();
+  }
+});
 
 // 当页面加载完成后初始化
 if (document.readyState === 'loading') {

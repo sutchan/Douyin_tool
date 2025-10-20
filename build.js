@@ -5,6 +5,17 @@ const path = require('path');
 const distDir = path.join(__dirname, 'dist');
 if (!fs.existsSync(distDir)) {
   fs.mkdirSync(distDir, { recursive: true });
+} else {
+  // 清理之前的构建文件
+  console.log('清理之前的构建文件...');
+  const files = fs.readdirSync(distDir);
+  files.forEach(file => {
+    const filePath = path.join(distDir, file);
+    if (fs.statSync(filePath).isFile()) {
+      fs.unlinkSync(filePath);
+      console.log(`已删除: ${file}`);
+    }
+  });
 }
 
 // 读取package.json信息
@@ -58,9 +69,11 @@ function readFile(filePath) {
   }
 }
 
-// 代码处理函数，直接返回原始代码
+// 代码处理函数，移除模块间的重复声明
 function processJS(jsCode) {
-  return jsCode;
+  // 移除所有的require语句，因为我们是直接合并代码而不是模块化加载
+  let processedCode = jsCode.replace(/const\s*{[^}]+}\s*=\s*require\(['"][^'"]+['"]\);/g, '');
+  return processedCode;
 }
 
 // 构建脚本
@@ -87,8 +100,10 @@ async function build() {
     
     // 改进的安全模块合并方式
     function safeAppendModule(code, moduleContent) {
+      // 处理代码，移除重复的require语句
+      let processedContent = processJS(moduleContent);
       // 确保代码块以分号结束，避免模块间语法错误
-      let safeContent = moduleContent.trim();
+      let safeContent = processedContent.trim();
       // 如果最后一个非空白字符不是分号或大括号，添加分号
       const lastNonWhitespace = safeContent.replace(/\s+$/, '');
       const lastChar = lastNonWhitespace.charAt(lastNonWhitespace.length - 1);
@@ -135,6 +150,13 @@ async function build() {
     if (metaEndIndex !== -1) {
       mainJSContent = mainJS.substring(metaEndIndex + 17); // 17是"// ==/UserScript=="的长度
     }
+    // 清理内容，移除开头可能的等号或其他无效字符
+    mainJSContent = mainJSContent.trim();
+    if (mainJSContent && mainJSContent.charAt(0) === '=') {
+      mainJSContent = mainJSContent.substring(1).trim();
+    }
+    // 移除main.js中的require语句
+    mainJSContent = mainJSContent.replace(/const\s*{[^}]+}\s*=\s*require\(['"][^'"]+['"]\);/g, '');
     // 更新版本号
     const updatedMainJS = mainJSContent.replace(/const CURRENT_VERSION = '[^']+'/, `const CURRENT_VERSION = '${pkg.version}'`);
     combinedJS += updatedMainJS.replace(/\s*$/, '');
