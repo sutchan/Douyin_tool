@@ -3,9 +3,6 @@
  * 负责处理配置的加载、保存和默认设置
  */
 
-// 导出模块中的所有函数
-export { loadConfig, saveConfig, resetConfig, mergeConfig, exportConfig, importConfig, DEFAULT_CONFIG };
-
 /**
  * 默认配置
  */

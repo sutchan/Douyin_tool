@@ -313,44 +313,32 @@ class UIManager {
 
   /**
    * 切换元素的显示/隐藏
-   * @param {string|Function|HTMLElement|HTMLElement[]} selectorOrFinder - CSS选择器、元素查找函数、DOM元素或元素数组
+   * @param {string|Function} selectorOrFinder - CSS选择器或元素查找函数
    * @param {boolean} show - 是否显示
-   * @returns {boolean} 操作是否成功
    */
   toggleElement(selectorOrFinder, show) {
-    // 参数验证
-    if (!selectorOrFinder) {
-      console.error('切换元素显示/隐藏失败：未提供选择器或元素');
-      return false;
-    }
-    
     let elements = [];
     
-    // 根据不同类型的选择器或查找函数处理
-    try {
-      if (typeof selectorOrFinder === 'function') {
+    // 检查参数类型
+    if (typeof selectorOrFinder === 'function') {
+      try {
         // 如果是函数，则调用它来查找元素
         elements = selectorOrFinder();
-      } else if (typeof selectorOrFinder === 'string') {
-        // 如果是选择器字符串
-        if (selectorOrFinder.trim() === '') {
-          console.error('切换元素显示/隐藏失败：选择器为空');
-          return false;
-        }
-        elements = document.querySelectorAll(selectorOrFinder);
-      } else if (selectorOrFinder instanceof HTMLElement) {
-        // 如果是单个DOM元素
-        elements = [selectorOrFinder];
-      } else if (Array.isArray(selectorOrFinder) || selectorOrFinder instanceof NodeList) {
-        // 如果已经是元素数组或NodeList
-        elements = selectorOrFinder;
-      } else {
-        console.error('切换元素显示/隐藏失败：无效的选择器类型', typeof selectorOrFinder);
-        return false;
+      } catch (e) {
+        console.error('查找元素函数执行失败:', e);
+        return;
       }
-    } catch (error) {
-      console.error('切换元素显示/隐藏失败：查找元素出错', error);
-      return false;
+    } else if (typeof selectorOrFinder === 'string' && selectorOrFinder.trim() !== '') {
+      // 如果是选择器字符串且不为空，则使用querySelectorAll
+      try {
+        elements = document.querySelectorAll(selectorOrFinder);
+      } catch (e) {
+        console.error('无效的CSS选择器:', selectorOrFinder, e);
+        return;
+      }
+    } else {
+      console.error('无效的选择器或查找函数参数');
+      return;
     }
     
     // 确保elements是数组
@@ -358,17 +346,10 @@ class UIManager {
       elements = Array.from(elements);
     }
     
-    // 如果没有找到元素，则返回
-    if (elements.length === 0) {
-      console.debug('没有找到要切换的元素');
-      return false;
-    }
-    
-    let successCount = 0;
-    
     // 处理元素显示/隐藏
     elements.forEach(function(element) {
       if (element && element.style) {
+<<<<<<< HEAD
         try {
           // 检查元素是否可能是视频内容元素，避免隐藏关键内容
           const isVideoContent = element.tagName === 'VIDEO' || 
@@ -402,11 +383,33 @@ class UIManager {
           successCount++;
         } catch (error) {
           console.error('处理元素时出错:', error);
+=======
+        if (show) {
+          // 显示元素，移除所有隐藏样式
+          element.style.display = '';
+          element.style.visibility = 'visible';
+          element.style.opacity = '1';
+          element.style.width = '';
+          element.style.height = '';
+          element.style.pointerEvents = '';
+          element.style.zIndex = '';
+          // 同时设置CSS类，用于确保样式优先
+          element.classList.remove('douyin-ui-hidden');
+        } else {
+          // 隐藏元素，使用更强大的样式隐藏方式
+          element.style.display = 'none !important';
+          element.style.visibility = 'hidden !important';
+          element.style.opacity = '0 !important';
+          element.style.width = '0 !important';
+          element.style.height = '0 !important';
+          element.style.pointerEvents = 'none !important';
+          element.style.zIndex = '-1 !important';
+          // 添加CSS类作为额外保障
+          element.classList.add('douyin-ui-hidden');
+>>>>>>> parent of b7b0ea8 (debug)
         }
       }
     });
-    
-    return successCount > 0;
   }
   
   /**

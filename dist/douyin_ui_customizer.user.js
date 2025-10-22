@@ -1,7 +1,11 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
+<<<<<<< HEAD
 // @version      1.0.82
+=======
+// @version      1.0.75
+>>>>>>> parent of b7b0ea8 (debug)
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -33,7 +37,7 @@ const darkStyles = "/**\n * 抖音UI定制工具 - 暗黑模式样式\n */\n\n/*
 // 工具函数模块
 /**
  * DOM操作工具模块
- * 提供常用的DOM操作工具函数
+ * 简化版，保留必要的工具函数
  */
 
 /**
@@ -42,7 +46,7 @@ const darkStyles = "/**\n * 抖音UI定制工具 - 暗黑模式样式\n */\n\n/*
  * @param {number} wait - 等待时间（毫秒）
  * @returns {Function} 防抖后的函数
  */
-export function debounce(func, wait) {
+function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
     const later = () => {
@@ -54,37 +58,12 @@ export function debounce(func, wait) {
   };
 }
 
-/**
- * 安全地选择单个元素
- * @param {string|HTMLElement} selector - CSS选择器或DOM元素
- * @returns {HTMLElement|null} 找到的元素或null
- */
-export function safeSelector(selector) {
-  if (!selector) return null;
-  if (typeof selector === 'string') {
-    return document.querySelector(selector);
-  }
-  return selector instanceof HTMLElement ? selector : null;
-}
-
-/**
- * 安全地选择多个元素
- * @param {string} selector - CSS选择器
- * @returns {NodeList} 找到的元素列表
- */
-export function safeSelectorAll(selector) {
-  if (!selector || typeof selector !== 'string') {
-    return document.createDocumentFragment().childNodes;
-  }
-  return document.querySelectorAll(selector);
-}
-
 // 模块分隔符
 
 // 存储工具模块
 /**
  * 本地存储工具模块
- * 提供数据存储、读取和移除功能
+ * 提供数据存储、读取功能
  */
 
 /**
@@ -93,12 +72,7 @@ export function safeSelectorAll(selector) {
  * @param {*} defaultValue - 默认值，当没有找到数据时返回
  * @returns {*} 存储的数据或默认值
  */
-export function getItem(key, defaultValue = null) {
-  if (!key || typeof key !== 'string') {
-    console.error('无效的存储键名');
-    return defaultValue;
-  }
-  
+function getItem(key, defaultValue = null) {
   try {
     const item = localStorage.getItem(key);
     if (item === null) {
@@ -117,43 +91,12 @@ export function getItem(key, defaultValue = null) {
  * @param {*} value - 要存储的数据
  * @returns {boolean} 是否存储成功
  */
-export function setItem(key, value) {
-  if (!key || typeof key !== 'string') {
-    console.error('无效的存储键名');
-    return false;
-  }
-  
+function setItem(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
     return true;
   } catch (error) {
     console.error(`设置本地存储数据失败 (${key}):`, error);
-    
-    // 检查是否是存储容量限制导致的错误
-    if (error.name === 'QuotaExceededError') {
-      console.warn('本地存储容量已达到上限');
-    }
-    
-    return false;
-  }
-}
-
-/**
- * 安全地移除本地存储数据
- * @param {string} key - 要移除的存储键名
- * @returns {boolean} 是否移除成功
- */
-export function removeItem(key) {
-  if (!key || typeof key !== 'string') {
-    console.error('无效的存储键名');
-    return false;
-  }
-  
-  try {
-    localStorage.removeItem(key);
-    return true;
-  } catch (error) {
-    console.error(`移除本地存储数据失败 (${key}):`, error);
     return false;
   }
 }
@@ -165,8 +108,6 @@ export function removeItem(key) {
  * 配置管理模块
  * 负责处理配置的加载、保存和默认设置
  */
-
-
 
 /**
  * 默认配置
@@ -630,44 +571,32 @@ class UIManager {
 
   /**
    * 切换元素的显示/隐藏
-   * @param {string|Function|HTMLElement|HTMLElement[]} selectorOrFinder - CSS选择器、元素查找函数、DOM元素或元素数组
+   * @param {string|Function} selectorOrFinder - CSS选择器或元素查找函数
    * @param {boolean} show - 是否显示
-   * @returns {boolean} 操作是否成功
    */
   toggleElement(selectorOrFinder, show) {
-    // 参数验证
-    if (!selectorOrFinder) {
-      console.error('切换元素显示/隐藏失败：未提供选择器或元素');
-      return false;
-    }
-    
     let elements = [];
     
-    // 根据不同类型的选择器或查找函数处理
-    try {
-      if (typeof selectorOrFinder === 'function') {
+    // 检查参数类型
+    if (typeof selectorOrFinder === 'function') {
+      try {
         // 如果是函数，则调用它来查找元素
         elements = selectorOrFinder();
-      } else if (typeof selectorOrFinder === 'string') {
-        // 如果是选择器字符串
-        if (selectorOrFinder.trim() === '') {
-          console.error('切换元素显示/隐藏失败：选择器为空');
-          return false;
-        }
-        elements = document.querySelectorAll(selectorOrFinder);
-      } else if (selectorOrFinder instanceof HTMLElement) {
-        // 如果是单个DOM元素
-        elements = [selectorOrFinder];
-      } else if (Array.isArray(selectorOrFinder) || selectorOrFinder instanceof NodeList) {
-        // 如果已经是元素数组或NodeList
-        elements = selectorOrFinder;
-      } else {
-        console.error('切换元素显示/隐藏失败：无效的选择器类型', typeof selectorOrFinder);
-        return false;
+      } catch (e) {
+        console.error('查找元素函数执行失败:', e);
+        return;
       }
-    } catch (error) {
-      console.error('切换元素显示/隐藏失败：查找元素出错', error);
-      return false;
+    } else if (typeof selectorOrFinder === 'string' && selectorOrFinder.trim() !== '') {
+      // 如果是选择器字符串且不为空，则使用querySelectorAll
+      try {
+        elements = document.querySelectorAll(selectorOrFinder);
+      } catch (e) {
+        console.error('无效的CSS选择器:', selectorOrFinder, e);
+        return;
+      }
+    } else {
+      console.error('无效的选择器或查找函数参数');
+      return;
     }
     
     // 确保elements是数组
@@ -675,17 +604,10 @@ class UIManager {
       elements = Array.from(elements);
     }
     
-    // 如果没有找到元素，则返回
-    if (elements.length === 0) {
-      console.debug('没有找到要切换的元素');
-      return false;
-    }
-    
-    let successCount = 0;
-    
     // 处理元素显示/隐藏
     elements.forEach(function(element) {
       if (element && element.style) {
+<<<<<<< HEAD
         try {
           // 检查元素是否可能是视频内容元素，避免隐藏关键内容
           const isVideoContent = element.tagName === 'VIDEO' || 
@@ -719,11 +641,33 @@ class UIManager {
           successCount++;
         } catch (error) {
           console.error('处理元素时出错:', error);
+=======
+        if (show) {
+          // 显示元素，移除所有隐藏样式
+          element.style.display = '';
+          element.style.visibility = 'visible';
+          element.style.opacity = '1';
+          element.style.width = '';
+          element.style.height = '';
+          element.style.pointerEvents = '';
+          element.style.zIndex = '';
+          // 同时设置CSS类，用于确保样式优先
+          element.classList.remove('douyin-ui-hidden');
+        } else {
+          // 隐藏元素，使用更强大的样式隐藏方式
+          element.style.display = 'none !important';
+          element.style.visibility = 'hidden !important';
+          element.style.opacity = '0 !important';
+          element.style.width = '0 !important';
+          element.style.height = '0 !important';
+          element.style.pointerEvents = 'none !important';
+          element.style.zIndex = '-1 !important';
+          // 添加CSS类作为额外保障
+          element.classList.add('douyin-ui-hidden');
+>>>>>>> parent of b7b0ea8 (debug)
         }
       }
     });
-    
-    return successCount > 0;
   }
   
   /**
@@ -1484,15 +1428,22 @@ class UIManager {
 /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
+<<<<<<< HEAD
  * 版本：1.0.81
+=======
+ * 版本：1.0.74
+>>>>>>> parent of b7b0ea8 (debug)
  */
 
 // 导入工具函数
-import { getItem, setItem } from './utils/storage.js';
-import { debounce } from './utils/dom.js';
+
 
 // 当前脚本版本
+<<<<<<< HEAD
 const CURRENT_VERSION = '1.0.82';
+=======
+const CURRENT_VERSION = '1.0.75';
+>>>>>>> parent of b7b0ea8 (debug)
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
