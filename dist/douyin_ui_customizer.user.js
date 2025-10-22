@@ -265,7 +265,7 @@ class UIManager {
   constructor(config) {
     this.config = config;
     this.settingsPanel = null;
-
+  }
 
   /**
    * 应用短视频界面定制
@@ -811,6 +811,7 @@ class UIManager {
     if (controlBarConfig.autoHide) {
       // 实现自动隐藏逻辑
     }
+  }
 
   /**
    * 自定义弹幕样式
