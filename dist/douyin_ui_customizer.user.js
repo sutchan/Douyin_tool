@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         douyin-ui-customizer
 // @namespace    https://github.com/SutChan/douyin_tool
-// @version      1.0.78
+// @version      1.0.82
 // @description  抖音Web端界面UI定制工具
 // @author       SutChan
 // @match        https://www.douyin.com/*
@@ -687,11 +687,23 @@ class UIManager {
     elements.forEach(function(element) {
       if (element && element.style) {
         try {
+          // 检查元素是否可能是视频内容元素，避免隐藏关键内容
+          const isVideoContent = element.tagName === 'VIDEO' || 
+                               element.classList.contains('video-content') || 
+                               element.classList.contains('video-player') ||
+                               element.closest('.video-content') || 
+                               element.closest('.video-player');
+          
+          if (isVideoContent && !show) {
+            console.warn('尝试隐藏可能的视频内容元素，跳过此操作');
+            return; // 跳过对视频内容元素的隐藏操作
+          }
+          
           if (show) {
-            // 显示元素，移除所有隐藏样式
+            // 显示元素，移除隐藏样式
             element.style.removeProperty('display');
-            element.style.visibility = 'visible';
-            element.style.opacity = '1';
+            element.style.removeProperty('visibility');
+            element.style.removeProperty('opacity');
             element.style.removeProperty('width');
             element.style.removeProperty('height');
             element.style.removeProperty('pointer-events');
@@ -699,16 +711,10 @@ class UIManager {
             // 移除CSS类
             element.classList.remove('douyin-ui-hidden');
           } else {
-            // 隐藏元素，使用更强大的样式隐藏方式
-            element.style.setProperty('display', 'none', 'important');
-            element.style.setProperty('visibility', 'hidden', 'important');
-            element.style.setProperty('opacity', '0', 'important');
-            element.style.setProperty('width', '0', 'important');
-            element.style.setProperty('height', '0', 'important');
-            element.style.setProperty('pointer-events', 'none', 'important');
-            element.style.setProperty('z-index', '-1', 'important');
-            // 添加CSS类作为额外保障
+            // 隐藏元素，使用更安全的方式，避免过多使用!important
             element.classList.add('douyin-ui-hidden');
+            // 只使用display:none作为主要的隐藏方式
+            element.style.display = 'none';
           }
           successCount++;
         } catch (error) {
@@ -1069,80 +1075,7 @@ class UIManager {
     // 取消拖动功能
   }
   
-  /**
-   * 使设置面板可拖动
-   * @param {HTMLElement} panel - 设置面板元素
-   */
-  makePanelDraggable(panel) {
-    const header = panel.querySelector('.panel-header');
-    if (!header) return;
-    
-    let isDragging = false;
-    let offsetX, offsetY;
-    
-    // 鼠标按下事件
-    const handleMouseDown = (e) => {
-      isDragging = true;
-      
-      // 计算鼠标相对于面板左上角的偏移量
-      const panelRect = panel.getBoundingClientRect();
-      offsetX = e.clientX - panelRect.left;
-      offsetY = e.clientY - panelRect.top;
-      
-      // 设置面板为绝对定位（如果还不是）
-      if (panel.style.position !== 'fixed') {
-        panel.style.position = 'fixed';
-      }
-      
-      // 添加拖拽时的视觉效果
-      header.style.cursor = 'grabbing';
-    };
-    
-    // 鼠标移动事件
-    const handleMouseMove = (e) => {
-      if (!isDragging) return;
-      
-      // 计算新位置
-      let newX = e.clientX - offsetX;
-      let newY = e.clientY - offsetY;
-      
-      // 限制在视口范围内
-      const panelRect = panel.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      newX = Math.max(0, Math.min(newX, viewportWidth - panelRect.width));
-      newY = Math.max(0, Math.min(newY, viewportHeight - panelRect.height));
-      
-      // 更新面板位置
-      panel.style.left = `${newX}px`;
-      panel.style.top = `${newY}px`;
-      panel.style.right = 'auto';
-      panel.style.bottom = 'auto';
-    };
-    
-    // 鼠标释放事件
-    const handleMouseUp = () => {
-      if (isDragging) {
-        isDragging = false;
-        header.style.cursor = 'grab';
-        
-        // 移除事件监听器，避免内存泄漏
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      }
-    };
-    
-    // 添加事件监听器
-    header.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    
-    // 阻止鼠标按下时的文本选择
-    header.addEventListener('selectstart', (e) => {
-      e.preventDefault();
-    });
-  }
+  // 拖拽功能已移除
 
   /**
    * 创建通用设置内容
@@ -1551,7 +1484,7 @@ class UIManager {
 /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
- * 版本：1.0.77
+ * 版本：1.0.81
  */
 
 // 导入工具函数
@@ -1559,7 +1492,7 @@ import { getItem, setItem } from './utils/storage.js';
 import { debounce } from './utils/dom.js';
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.78';
+const CURRENT_VERSION = '1.0.82';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
