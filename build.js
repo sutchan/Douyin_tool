@@ -129,8 +129,14 @@ function readFile(filePath) {
 
 // 代码处理函数，移除模块间的重复声明并在生产模式下进行轻量级清理
 function processJS(jsCode) {
-  // 移除所有的require语句，因为我们是直接合并代码而不是模块化加载
-  let processedCode = jsCode.replace(/const\s*{[^}]+}\s*=\s*require\(['"][^'"]+['"]\);/g, '');
+  // 移除所有的require语句和import语句，因为我们是直接合并代码而不是模块化加载
+  // 但保留export语句，因为这些会在构建过程中被正确处理
+  let processedCode = jsCode
+    .replace(/const\s*{[^}]+}\s*=\s*require\(['"][^'"]+['"]\);/g, '')
+    .replace(/import\s*{[^}]+}\s*from\s*['"][^'"]+['"];/g, '');
+  
+  // 移除文件末尾的export语句，因为我们直接合并代码，不需要导出
+  processedCode = processedCode.replace(/\/\/\s*导出模块中的所有函数\s*\nexport\s*{[^}]+}\s*;/g, '');
   
   // 在生产模式下进行轻量级清理，避免过度压缩导致语法错误
   if (BUILD_OPTIONS.production) {
