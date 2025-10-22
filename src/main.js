@@ -1,11 +1,7 @@
 // ==UserScript==
 // @name         抖音网页版UI定制工具
 // @namespace    http://tampermonkey.net/
-<<<<<<< HEAD
-// @version 1.0.82
-=======
-// @version 1.0.75
->>>>>>> parent of b7b0ea8 (debug)
+// @version 1.0.83
 // @description  抖音Web端界面UI定制工具，可自定义短视频和直播间界面
 // @author       SutChan
 // @match        *://*.douyin.com/*
@@ -20,22 +16,14 @@
 /**
  * 抖音Web端界面UI定制工具主入口
  * 作者：SutChan
-<<<<<<< HEAD
- * 版本：1.0.82
-=======
- * 版本：1.0.75
->>>>>>> parent of b7b0ea8 (debug)
+ * 版本：1.0.83
  */
 
 // 导入工具函数
 const { getItem, setItem } = require('./utils/storage.js');
 
 // 当前脚本版本
-<<<<<<< HEAD
-const CURRENT_VERSION = '1.0.82';
-=======
-const CURRENT_VERSION = '1.0.75';
->>>>>>> parent of b7b0ea8 (debug)
+const CURRENT_VERSION = '1.0.83';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 

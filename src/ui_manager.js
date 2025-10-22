@@ -349,7 +349,6 @@ class UIManager {
     // 处理元素显示/隐藏
     elements.forEach(function(element) {
       if (element && element.style) {
-<<<<<<< HEAD
         try {
           // 检查元素是否可能是视频内容元素，避免隐藏关键内容
           const isVideoContent = element.tagName === 'VIDEO' || 
@@ -357,56 +356,39 @@ class UIManager {
                                element.classList.contains('video-player') ||
                                element.closest('.video-content') || 
                                element.closest('.video-player');
-          
+           
           if (isVideoContent && !show) {
             console.warn('尝试隐藏可能的视频内容元素，跳过此操作');
             return; // 跳过对视频内容元素的隐藏操作
           }
-          
+           
           if (show) {
-            // 显示元素，移除隐藏样式
-            element.style.removeProperty('display');
-            element.style.removeProperty('visibility');
-            element.style.removeProperty('opacity');
-            element.style.removeProperty('width');
-            element.style.removeProperty('height');
-            element.style.removeProperty('pointer-events');
-            element.style.removeProperty('z-index');
-            // 移除CSS类
+            // 显示元素，移除所有隐藏样式
+            element.style.display = '';
+            element.style.visibility = 'visible';
+            element.style.opacity = '1';
+            element.style.width = '';
+            element.style.height = '';
+            element.style.pointerEvents = '';
+            element.style.zIndex = '';
+            // 同时设置CSS类，用于确保样式优先
             element.classList.remove('douyin-ui-hidden');
           } else {
-            // 隐藏元素，使用更安全的方式，避免过多使用!important
+            // 隐藏元素，使用更强大的样式隐藏方式
+            element.style.display = 'none !important';
+            element.style.visibility = 'hidden !important';
+            element.style.opacity = '0 !important';
+            element.style.width = '0 !important';
+            element.style.height = '0 !important';
+            element.style.pointerEvents = 'none !important';
+            element.style.zIndex = '-1 !important';
+            // 添加CSS类作为额外保障
             element.classList.add('douyin-ui-hidden');
-            // 只使用display:none作为主要的隐藏方式
-            element.style.display = 'none';
           }
+          let successCount = 0; // 初始化计数器以避免引用错误
           successCount++;
         } catch (error) {
           console.error('处理元素时出错:', error);
-=======
-        if (show) {
-          // 显示元素，移除所有隐藏样式
-          element.style.display = '';
-          element.style.visibility = 'visible';
-          element.style.opacity = '1';
-          element.style.width = '';
-          element.style.height = '';
-          element.style.pointerEvents = '';
-          element.style.zIndex = '';
-          // 同时设置CSS类，用于确保样式优先
-          element.classList.remove('douyin-ui-hidden');
-        } else {
-          // 隐藏元素，使用更强大的样式隐藏方式
-          element.style.display = 'none !important';
-          element.style.visibility = 'hidden !important';
-          element.style.opacity = '0 !important';
-          element.style.width = '0 !important';
-          element.style.height = '0 !important';
-          element.style.pointerEvents = 'none !important';
-          element.style.zIndex = '-1 !important';
-          // 添加CSS类作为额外保障
-          element.classList.add('douyin-ui-hidden');
->>>>>>> parent of b7b0ea8 (debug)
         }
       }
     });
@@ -650,6 +632,9 @@ class UIManager {
     // 创建设置面板
     this.settingsPanel = this.createSettingsPanel();
     document.body.appendChild(this.settingsPanel);
+    
+    // 启用设置面板拖拽功能
+    this.makePanelDraggable(this.settingsPanel);
   }
 
   /**
@@ -761,7 +746,104 @@ class UIManager {
     // 取消拖动功能
   }
   
-  // 拖拽功能已移除
+  /**
+   * 使面板可拖动
+   * @param {HTMLElement} panel - 要使其可拖动的面板元素
+   */
+  makePanelDraggable(panel) {
+    if (!panel) return;
+    
+    const header = panel.querySelector('.panel-header');
+    if (!header) return;
+    
+    let isDragging = false;
+    let offsetX, offsetY;
+    
+    header.addEventListener('mousedown', (e) => {
+      // 只有点击标题栏区域才触发拖动
+      if (e.target.closest('button')) return;
+      
+      isDragging = true;
+      const rect = panel.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      
+      // 添加样式标识拖动状态
+      panel.classList.add('dragging');
+      
+      // 防止文本选择
+      e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      
+      // 计算新位置
+      let newLeft = e.clientX - offsetX;
+      let newTop = e.clientY - offsetY;
+      
+      // 限制在视口内
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const panelWidth = panel.offsetWidth;
+      const panelHeight = panel.offsetHeight;
+      
+      newLeft = Math.max(0, Math.min(newLeft, viewportWidth - panelWidth));
+      newTop = Math.max(0, Math.min(newTop, viewportHeight - panelHeight));
+      
+      // 设置位置
+      panel.style.left = newLeft + 'px';
+      panel.style.top = newTop + 'px';
+    });
+    
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      
+      isDragging = false;
+      panel.classList.remove('dragging');
+    });
+    
+    // 添加触摸事件支持
+    header.addEventListener('touchstart', (e) => {
+      if (e.target.closest('button')) return;
+      
+      isDragging = true;
+      const touch = e.touches[0];
+      const rect = panel.getBoundingClientRect();
+      offsetX = touch.clientX - rect.left;
+      offsetY = touch.clientY - rect.top;
+      
+      panel.classList.add('dragging');
+      e.preventDefault();
+    }, { passive: false });
+    
+    document.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      
+      const touch = e.touches[0];
+      let newLeft = touch.clientX - offsetX;
+      let newTop = touch.clientY - offsetY;
+      
+      // 限制在视口内
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const panelWidth = panel.offsetWidth;
+      const panelHeight = panel.offsetHeight;
+      
+      newLeft = Math.max(0, Math.min(newLeft, viewportWidth - panelWidth));
+      newTop = Math.max(0, Math.min(newTop, viewportHeight - panelHeight));
+      
+      panel.style.left = newLeft + 'px';
+      panel.style.top = newTop + 'px';
+    }, { passive: false });
+    
+    document.addEventListener('touchend', () => {
+      if (!isDragging) return;
+      
+      isDragging = true;
+      panel.classList.remove('dragging');
+    });
+  }
 
   /**
    * 创建通用设置内容
