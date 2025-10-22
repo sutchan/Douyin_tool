@@ -127,13 +127,13 @@ function readFile(filePath) {
   }
 }
 
-// 代码处理函数，移除模块间的重复声明并在生产模式下进行轻量级清理
+// 代码处理函数，移除模块间的重复声明并进行代码清理
 function processJS(jsCode) {
   // 移除所有的require语句，因为我们是直接合并代码而不是模块化加载
   let processedCode = jsCode.replace(/const\s*{[^}]+}\s*=\s*require\(['"][^'"]+['"]\);/g, '');
   
-  // 在生产模式下进行轻量级清理，避免过度压缩导致语法错误
-  if (BUILD_OPTIONS.production) {
+  // 进行代码清理，移除不必要的console.log语句
+  
     log('正在清理代码...', 'verbose');
     
     // 1. 移除多行注释（小心处理，避免破坏正则表达式中的注释）
@@ -201,7 +201,47 @@ function processJS(jsCode) {
     
     // 2. 移除行尾空白
     processedCode = processedCode.replace(/\s+$/gm, '');
+  
+  // 移除console.log语句（保留注释）
+  // 使用更简单但有效的正则表达式，同时保持足够的安全性
+  const logCleanLines = [];
+  
+  for (const logLine of processedCode.split('\n')) {
+    // 检查是否包含console.log但不是在字符串内部
+    if (logLine.match(/console\.log\(/)) {
+      // 简单检查是否在字符串内部
+      const quotesBefore = logLine.substring(0, logLine.indexOf('console.log(')).match(/['"]/g) || [];
+      if (quotesBefore.length % 2 === 0) {
+        // 不包含在字符串中，可以安全地移除
+        // 如果行中只有console.log和可能的注释，保留注释部分
+        const commentMatch = logLine.match(/(\s*)(.*?console\.log\([^)]*\);?)(\s*)(\/\/.*)?/);
+        if (commentMatch && commentMatch[4]) {
+          // 保留缩进和注释
+          logCleanLines.push(`${commentMatch[1]}${commentMatch[4]}`);
+        } else {
+          // 否则跳过这一行
+          continue;
+        }
+      } else {
+        // 可能在字符串内部，保留完整行
+        logCleanLines.push(logLine);
+      }
+    } else {
+      // 不包含console.log，保留完整行
+      logCleanLines.push(logLine);
+    }
   }
+  
+  processedCode = logCleanLines.join('\n');
+  // 移除空行
+  processedCode = processedCode.replace(/^\s*$/gm, '').replace(/\n{3,}/g, '\n\n');
+  
+  // 再次清理剩余的console.log语句，使用更简单的正则表达式
+  // 注意：这可能不完美，但会捕获更多情况
+  processedCode = processedCode.replace(/\s*console\.log\([^)]*\);?/g, '');
+  
+  // 移除空行和多余的空白
+  processedCode = processedCode.replace(/\n\s*\n/g, '\n');
   
   return processedCode;
 }
@@ -267,8 +307,19 @@ async function build() {
     // 1. CSS样式定义
     log('合并CSS样式定义...', 'verbose');
     combinedJS += "// CSS样式定义\n";
-    combinedJS += "const defaultStyles = " + JSON.stringify(defaultCSS) + ";\n";
-    combinedJS += "const darkStyles = " + JSON.stringify(darkCSS) + ";\n\n";
+    // 使用更安全的方式处理CSS内容，避免模板字符串问题
+    // 先对CSS内容进行全面清理，确保没有特殊字符会导致语法错误
+    const cleanCSS = (css) => {
+      // 替换所有可能导致问题的字符
+      return css
+        .replace(/\\/g, '\\\\')      // 转义反斜杠
+        .replace(/'/g, "\\'")        // 转义单引号
+        .replace(/\r\n/g, '\\n')     // 将Windows换行符替换为转义的换行符
+        .replace(/\r/g, '\\n')       // 将单个回车符替换为转义的换行符
+        .replace(/\n/g, '\\n');      // 将换行符替换为转义的换行符
+    
+    combinedJS += "const defaultStyles = '" + cleanCSS(defaultCSS) + "';\n";
+    combinedJS += "const darkStyles = '" + cleanCSS(darkCSS) + "';\n\n";
     
     // 2. 工具函数模块
     log('合并工具函数模块...', 'verbose');
@@ -314,7 +365,10 @@ async function build() {
     
     // 生成最终脚本，使用简单的字符串连接
     const header = generateUserscriptHeader();
-    const finalScript = header + "\n\n" + combinedJS;
+    let finalScript = header + "\n\n" + combinedJS;
+    
+    // 在最终生成前清理所有console.log语句
+    finalScript = finalScript.replace(/console\.log\([^)]*\);?/g, '');
     
     // 写入文件
     const outputPath = path.join(distDir, 'douyin_ui_customizer.user.js');
