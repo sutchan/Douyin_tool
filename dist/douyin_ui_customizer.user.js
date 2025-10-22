@@ -1094,7 +1094,7 @@ class UIManager {
     document.addEventListener('touchend', () => {
       if (!isDragging) return;
       
-      isDragging = true;
+      isDragging = false;
       panel.classList.remove('dragging');
     });
   }
