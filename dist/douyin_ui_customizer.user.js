@@ -265,7 +265,7 @@ class UIManager {
   constructor(config) {
     this.config = config;
     this.settingsPanel = null;
-  }
+
 
   /**
    * 应用短视频界面定制
@@ -811,7 +811,6 @@ class UIManager {
     if (controlBarConfig.autoHide) {
       // 实现自动隐藏逻辑
     }
-  }
 
   /**
    * 自定义弹幕样式
@@ -1001,7 +1000,7 @@ class UIManager {
   }
   
   /**
-   * 使面板可拖动
+   * 使面板可拖动并确保不会移出窗口范围
    * @param {HTMLElement} panel - 要使其可拖动的面板元素
    */
   makePanelDraggable(panel) {
@@ -1009,6 +1008,12 @@ class UIManager {
     
     const header = panel.querySelector('.panel-header');
     if (!header) return;
+    
+    // 确保面板初始化时就不会超出视口范围
+    this.restrictPanelToViewport(panel);
+    
+    // 移除transform属性，改用left和top定位
+    panel.style.transform = 'none';
     
     let isDragging = false;
     let offsetX, offsetY;
@@ -1042,6 +1047,7 @@ class UIManager {
       const panelWidth = panel.offsetWidth;
       const panelHeight = panel.offsetHeight;
       
+      // 确保面板不会移出视口范围
       newLeft = Math.max(0, Math.min(newLeft, viewportWidth - panelWidth));
       newTop = Math.max(0, Math.min(newTop, viewportHeight - panelHeight));
       
@@ -1055,6 +1061,9 @@ class UIManager {
       
       isDragging = false;
       panel.classList.remove('dragging');
+      
+      // 释放拖动后再次检查边界
+      this.restrictPanelToViewport(panel);
     });
     
     // 添加触摸事件支持
@@ -1084,6 +1093,7 @@ class UIManager {
       const panelWidth = panel.offsetWidth;
       const panelHeight = panel.offsetHeight;
       
+      // 确保面板不会移出视口范围
       newLeft = Math.max(0, Math.min(newLeft, viewportWidth - panelWidth));
       newTop = Math.max(0, Math.min(newTop, viewportHeight - panelHeight));
       
@@ -1096,7 +1106,45 @@ class UIManager {
       
       isDragging = false;
       panel.classList.remove('dragging');
+      
+      // 释放拖动后再次检查边界
+      this.restrictPanelToViewport(panel);
     });
+  }
+  
+  /**
+   * 确保面板完全在视口范围内
+   * @param {HTMLElement} panel - 面板元素
+   */
+  restrictPanelToViewport(panel) {
+    if (!panel) return;
+    
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const rect = panel.getBoundingClientRect();
+    const panelWidth = rect.width;
+    const panelHeight = rect.height;
+    
+    let left = rect.left;
+    let top = rect.top;
+    
+    // 检查左右边界
+    if (left < 0) {
+      left = 0;
+    } else if (left + panelWidth > viewportWidth) {
+      left = viewportWidth - panelWidth;
+    }
+    
+    // 检查上下边界
+    if (top < 0) {
+      top = 0;
+    } else if (top + panelHeight > viewportHeight) {
+      top = viewportHeight - panelHeight;
+    }
+    
+    // 应用修正后的位置
+    panel.style.left = left + 'px';
+    panel.style.top = top + 'px';
   }
 
   /**
@@ -1152,31 +1200,31 @@ class UIManager {
       <div class="setting-group">
         <h3>显示元素</h3>
         <label>
-          <input type="checkbox" id="showLikeButton" ${this.config.videoUI?.showLikeButton ? 'checked' : ''}>
+          <input type="checkbox" id="showLikeButton" ${this.config.video?.showLikeButton ?? true ? 'checked' : ''}>
           显示点赞按钮
         </label>
         <label>
-          <input type="checkbox" id="showCommentButton" ${this.config.videoUI?.showCommentButton ? 'checked' : ''}>
+          <input type="checkbox" id="showCommentButton" ${this.config.video?.showCommentButton ?? true ? 'checked' : ''}>
           显示评论按钮
         </label>
         <label>
-          <input type="checkbox" id="showShareButton" ${this.config.videoUI?.showShareButton ? 'checked' : ''}>
+          <input type="checkbox" id="showShareButton" ${this.config.video?.showShareButton ?? true ? 'checked' : ''}>
           显示分享按钮
         </label>
         <label>
-          <input type="checkbox" id="showAuthorInfo" ${this.config.videoUI?.showAuthorInfo ? 'checked' : ''}>
+          <input type="checkbox" id="showAuthorInfo" ${this.config.video?.showAuthorInfo ?? true ? 'checked' : ''}>
           显示作者信息
         </label>
         <label>
-          <input type="checkbox" id="showMusicInfo" ${this.config.videoUI?.showMusicInfo ? 'checked' : ''}>
+          <input type="checkbox" id="showMusicInfo" ${this.config.video?.showMusicInfo ?? true ? 'checked' : ''}>
           显示音乐信息
         </label>
         <label>
-          <input type="checkbox" id="showDescription" ${this.config.videoUI?.showDescription ? 'checked' : ''}>
+          <input type="checkbox" id="showVideoDesc" ${this.config.video?.showVideoDesc ?? true ? 'checked' : ''}>
           显示视频描述
         </label>
         <label>
-          <input type="checkbox" id="showRecommendations" ${this.config.videoUI?.showRecommendations ? 'checked' : ''}>
+          <input type="checkbox" id="showRecommendedVideos" ${this.config.video?.showRecommendedVideos ?? true ? 'checked' : ''}>
           显示推荐视频
         </label>
       </div>
@@ -1184,19 +1232,20 @@ class UIManager {
       <div class="setting-group">
         <h3>控制栏设置</h3>
         <label>
-          <input type="checkbox" id="controlBarShow" ${this.config.videoUI?.controlBar?.show ? 'checked' : ''}>
-          显示控制栏
+          <input type="checkbox" id="showProgressBar" ${this.config.video?.showProgressBar ?? true ? 'checked' : ''}>
+          显示进度条
         </label>
         <label>
-          <input type="checkbox" id="controlBarAutoHide" ${this.config.videoUI?.controlBar?.autoHide ? 'checked' : ''}>
-          自动隐藏控制栏
+          <input type="checkbox" id="showPlayPauseButton" ${this.config.video?.showPlayPauseButton ?? true ? 'checked' : ''}>
+          显示播放/暂停按钮
         </label>
         <label>
-          <select id="controlBarPosition">
-            <option value="bottom" ${this.config.videoUI?.controlBar?.position === 'bottom' ? 'selected' : ''}>底部</option>
-            <option value="top" ${this.config.videoUI?.controlBar?.position === 'top' ? 'selected' : ''}>顶部</option>
-          </select>
-          控制栏位置
+          <input type="checkbox" id="showVolumeControl" ${this.config.video?.showVolumeControl ?? true ? 'checked' : ''}>
+          显示音量控制
+        </label>
+        <label>
+          <input type="checkbox" id="showFullscreenButton" ${this.config.video?.showFullscreenButton ?? true ? 'checked' : ''}>
+          显示全屏按钮
         </label>
       </div>
     `;
@@ -1211,294 +1260,347 @@ class UIManager {
       <div class="setting-group">
         <h3>显示元素</h3>
         <label>
-          <input type="checkbox" id="showGifts" ${this.config.liveUI?.showGifts ? 'checked' : ''}>
-          显示礼物动画
+          <input type="checkbox" id="liveShowLikeButton" ${this.config.live?.showLikeButton ?? true ? 'checked' : ''}>
+          显示点赞按钮
         </label>
         <label>
-          <input type="checkbox" id="showDanmaku" ${this.config.liveUI?.showDanmaku ? 'checked' : ''}>
-          显示弹幕
+          <input type="checkbox" id="liveShowCommentButton" ${this.config.live?.showCommentButton ?? true ? 'checked' : ''}>
+          显示评论按钮
         </label>
         <label>
-          <input type="checkbox" id="showRecommendations" ${this.config.liveUI?.showRecommendations ? 'checked' : ''}>
-          显示推荐直播
+          <input type="checkbox" id="liveShowShareButton" ${this.config.live?.showShareButton ?? true ? 'checked' : ''}>
+          显示分享按钮
         </label>
         <label>
-          <input type="checkbox" id="showAds" ${this.config.liveUI?.showAds ? 'checked' : ''}>
-          显示广告
+          <input type="checkbox" id="liveShowAuthorInfo" ${this.config.live?.showAuthorInfo ?? true ? 'checked' : ''}>
+          显示作者信息
         </label>
         <label>
-          <input type="checkbox" id="showStats" ${this.config.liveUI?.showStats ? 'checked' : ''}>
-          显示统计信息
+          <input type="checkbox" id="liveShowGiftButton" ${this.config.live?.showGiftButton ?? true ? 'checked' : ''}>
+          显示礼物按钮
         </label>
       </div>
       
       <div class="setting-group">
         <h3>弹幕设置</h3>
         <label>
-          <input type="number" id="danmakuFontSize" min="12" max="36" value="${this.config.liveUI?.danmaku?.fontSize || 16}">
-          字体大小（px）
+          <input type="checkbox" id="showDanmu" ${this.config.live?.showDanmu ?? true ? 'checked' : ''}>
+          显示弹幕
         </label>
         <label>
-          <input type="color" id="danmakuColor" value="${this.config.liveUI?.danmaku?.color || '#FFFFFF'}">
-          字体颜色
-        </label>
-        <label>
-          <input type="range" id="danmakuOpacity" min="0.1" max="1" step="0.1" value="${this.config.liveUI?.danmaku?.opacity || 0.8}">
-          透明度: <span id="opacityValue">${this.config.liveUI?.danmaku?.opacity || 0.8}</span>
-        </label>
-        <label>
-          <select id="danmakuSpeed">
-            <option value="slow" ${this.config.liveUI?.danmaku?.speed === 'slow' ? 'selected' : ''}>慢速</option>
-            <option value="medium" ${this.config.liveUI?.danmaku?.speed === 'medium' ? 'selected' : ''}>中速</option>
-            <option value="fast" ${this.config.liveUI?.danmaku?.speed === 'fast' ? 'selected' : ''}>快速</option>
-          </select>
-          弹幕速度
+          <input type="range" id="danmuOpacity" min="0" max="1" step="0.1" value="${this.config.live?.danmuOpacity ?? 1}">
+          弹幕透明度: <span id="danmuOpacityValue">${(this.config.live?.danmuOpacity ?? 1) * 100}%</span>
         </label>
       </div>
     `;
   }
 
   /**
-   * 创建导入导出设置内容
-   * @returns {string} HTML字符串
+   * 应用配置到设置面板
    */
-  createImportExportSettings() {
-    return `
-      <div class="setting-group">
-        <h3>导出配置</h3>
-        <button id="exportBtn">导出配置</button>
-        <p>点击按钮导出当前配置到JSON文件</p>
-      </div>
-      
-      <div class="setting-group">
-        <h3>导入配置</h3>
-        <input type="file" id="importFile" accept=".json">
-        <button id="importBtn">导入配置</button>
-        <p>选择JSON配置文件并点击导入</p>
-      </div>
-    `;
+  applySettingsToPanel() {
+    if (!this.settingsPanel) return;
+
+    // 应用主题
+    this.applyTheme(this.config.theme);
+
+    // 添加事件监听
+    this.settingsPanel.querySelectorAll('input[type="radio"][name="theme"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        this.config.theme = e.target.value;
+        this.applyTheme(this.config.theme);
+        this.saveConfig();
+      });
+    });
+
+    // 通用设置事件监听
+    const generalSettings = [
+      'autoPlay', 'autoScroll', 'keyboardShortcuts', 'notifications'
+    ];
+
+    generalSettings.forEach(setting => {
+      const checkbox = this.settingsPanel.querySelector(`#${setting}`);
+      if (checkbox) {
+        checkbox.addEventListener('change', (e) => {
+          if (!this.config.general) this.config.general = {};
+          this.config.general[setting] = e.target.checked;
+          this.saveConfig();
+        });
+      }
+    });
+
+    // 视频设置事件监听
+    const videoSettings = [
+      'showLikeButton', 'showCommentButton', 'showShareButton',
+      'showAuthorInfo', 'showMusicInfo', 'showVideoDesc',
+      'showRecommendedVideos', 'showProgressBar', 'showPlayPauseButton',
+      'showVolumeControl', 'showFullscreenButton'
+    ];
+
+    videoSettings.forEach(setting => {
+      const checkbox = this.settingsPanel.querySelector(`#${setting}`);
+      if (checkbox) {
+        checkbox.addEventListener('change', (e) => {
+          if (!this.config.video) this.config.video = {};
+          this.config.video[setting] = e.target.checked;
+          this.saveConfig();
+          this.applyVideoCustomizations();
+        });
+      }
+    });
+
+    // 直播间设置事件监听
+    const liveSettings = [
+      'liveShowLikeButton', 'liveShowCommentButton', 'liveShowShareButton',
+      'liveShowAuthorInfo', 'liveShowGiftButton', 'showDanmu'
+    ];
+
+    liveSettings.forEach(setting => {
+      const checkbox = this.settingsPanel.querySelector(`#${setting}`);
+      if (checkbox) {
+        checkbox.addEventListener('change', (e) => {
+          if (!this.config.live) this.config.live = {};
+          this.config.live[setting] = e.target.checked;
+          this.saveConfig();
+          this.applyLiveCustomizations();
+        });
+      }
+    });
+
+    // 弹幕透明度设置
+    const danmuOpacitySlider = this.settingsPanel.querySelector('#danmuOpacity');
+    if (danmuOpacitySlider) {
+      danmuOpacitySlider.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value);
+        this.settingsPanel.querySelector('#danmuOpacityValue').textContent = `${value * 100}%`;
+        if (!this.config.live) this.config.live = {};
+        this.config.live.danmuOpacity = value;
+        this.saveConfig();
+        this.applyLiveCustomizations();
+      });
+    }
   }
 
   /**
-   * 显示提示消息
-   * @param {string} message - 提示消息内容
-   * @param {string} type - 提示类型：success, error, info
+   * 应用主题到页面
+   * @param {string} theme - 主题名称 ('light' 或 'dark')
    */
-  showNotification(message, type = 'success') {
-    // 创建通知元素
-    const notification = document.createElement('div');
-    notification.className = `douyin-ui-customizer-notification notification-${type}`;
-    notification.textContent = message;
+  applyTheme(theme) {
+    if (theme === 'dark') {
+      document.body.classList.add('dark-theme');
+      this.settingsPanel?.classList.add('dark-theme');
+    } else {
+      document.body.classList.remove('dark-theme');
+      this.settingsPanel?.classList.remove('dark-theme');
+    }
+  }
+
+  /**
+   * 保存配置到本地存储
+   */
+  saveConfig() {
+    saveConfig(this.config);
+  }
+
+  /**
+   * 初始化设置面板
+   */
+  initSettingsPanel() {
+    // 创建设置面板
+    this.settingsPanel = document.createElement('div');
+    this.settingsPanel.id = 'douyin-customizer-panel';
+    this.settingsPanel.className = 'customizer-panel';
     
-    // 添加样式
-    Object.assign(notification.style, {
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      padding: '12px 20px',
-      borderRadius: '6px',
-      color: '#fff',
-      fontSize: '14px',
-      fontWeight: '500',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      zIndex: '999999',
-      opacity: '0',
-      transform: 'translateX(100%)',
-      transition: 'all 0.3s ease-out',
-      backgroundColor: type === 'success' ? '#52c41a' : 
-                       type === 'error' ? '#ff4d4f' : '#1890ff',
-      maxWidth: '300px',
-      wordWrap: 'break-word'
+    // 设置面板样式
+    this.settingsPanel.style.position = 'fixed';
+    this.settingsPanel.style.left = '20px';
+    this.settingsPanel.style.top = '20px';
+    this.settingsPanel.style.width = '320px';
+    this.settingsPanel.style.maxHeight = '80vh';
+    this.settingsPanel.style.overflowY = 'auto';
+    this.settingsPanel.style.backgroundColor = '#fff';
+    this.settingsPanel.style.border = '1px solid #e0e0e0';
+    this.settingsPanel.style.borderRadius = '8px';
+    this.settingsPanel.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+    this.settingsPanel.style.zIndex = '9999';
+    this.settingsPanel.style.padding = '20px';
+    
+    // 添加拖动句柄
+    const dragHandle = document.createElement('div');
+    dragHandle.className = 'drag-handle';
+    dragHandle.style.cursor = 'move';
+    dragHandle.style.padding = '10px';
+    dragHandle.style.backgroundColor = '#f5f5f5';
+    dragHandle.style.borderRadius = '4px 4px 0 0';
+    dragHandle.style.marginBottom = '15px';
+    dragHandle.textContent = '抖音UI定制工具 (拖动移动)';
+    
+    // 添加关闭按钮
+    const closeButton = document.createElement('button');
+    closeButton.className = 'close-button';
+    closeButton.style.position = 'absolute';
+    closeButton.style.top = '10px';
+    closeButton.style.right = '10px';
+    closeButton.style.width = '24px';
+    closeButton.style.height = '24px';
+    closeButton.style.border = 'none';
+    closeButton.style.backgroundColor = 'transparent';
+    closeButton.style.cursor = 'pointer';
+    closeButton.style.fontSize = '18px';
+    closeButton.style.lineHeight = '1';
+    closeButton.textContent = '×';
+    closeButton.addEventListener('click', () => {
+      this.settingsPanel.style.display = 'none';
+      this.showToggleButton();
     });
     
-    // 添加到页面
-    document.body.appendChild(notification);
+    // 添加设置内容
+    const settingsContent = document.createElement('div');
+    settingsContent.className = 'settings-content';
     
-    // 显示通知
-    setTimeout(() => {
-      Object.assign(notification.style, {
-        opacity: '1',
-        transform: 'translateX(0)'
-      });
-    }, 10);
+    // 创建选项卡导航
+    const tabNavigation = document.createElement('div');
+    tabNavigation.className = 'tab-navigation';
+    tabNavigation.innerHTML = `
+      <button class="tab-button active" data-tab="general">通用设置</button>
+      <button class="tab-button" data-tab="video">视频设置</button>
+      <button class="tab-button" data-tab="live">直播设置</button>
+    `;
     
-    // 自动隐藏
-    setTimeout(() => {
-      Object.assign(notification.style, {
-        opacity: '0',
-        transform: 'translateX(100%)'
+    // 创建选项卡内容
+    const tabContent = document.createElement('div');
+    tabContent.className = 'tab-content';
+    
+    // 通用设置选项卡
+    const generalTab = document.createElement('div');
+    generalTab.className = 'tab-pane active';
+    generalTab.id = 'general-tab';
+    generalTab.innerHTML = this.createGeneralSettings();
+    
+    // 视频设置选项卡
+    const videoTab = document.createElement('div');
+    videoTab.className = 'tab-pane';
+    videoTab.id = 'video-tab';
+    videoTab.innerHTML = this.createVideoSettings();
+    
+    // 直播设置选项卡
+    const liveTab = document.createElement('div');
+    liveTab.className = 'tab-pane';
+    liveTab.id = 'live-tab';
+    liveTab.innerHTML = this.createLiveSettings();
+    
+    // 组装设置面板
+    this.settingsPanel.appendChild(dragHandle);
+    this.settingsPanel.appendChild(closeButton);
+    this.settingsPanel.appendChild(tabNavigation);
+    tabContent.appendChild(generalTab);
+    tabContent.appendChild(videoTab);
+    tabContent.appendChild(liveTab);
+    this.settingsPanel.appendChild(tabContent);
+    
+    // 添加到文档
+    document.body.appendChild(this.settingsPanel);
+    
+    // 使面板可拖动
+    this.makePanelDraggable(this.settingsPanel, dragHandle);
+    
+    // 初始化时检查并限制面板在视口内
+    this.restrictPanelToViewport(this.settingsPanel);
+    
+    // 应用设置
+    this.applySettingsToPanel();
+    
+    // 设置选项卡切换
+    tabNavigation.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', () => {
+        const tabId = button.getAttribute('data-tab');
+        
+        // 移除所有活动状态
+        tabNavigation.querySelectorAll('.tab-button').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        tabContent.querySelectorAll('.tab-pane').forEach(pane => {
+          pane.classList.remove('active');
+        });
+        
+        // 添加活动状态
+        button.classList.add('active');
+        tabContent.querySelector(`#${tabId}-tab`).classList.add('active');
       });
-      
-      // 移除元素
-      setTimeout(() => {
-        notification.remove();
-      }, 300);
-    }, 3000);
+    });
+    
+    // 初始化主题
+    this.applyTheme(this.config.theme);
   }
 
   /**
-   * 初始化导入导出功能
-   * @param {HTMLElement} panel - 设置面板元素
+   * 显示切换按钮
    */
-  initImportExport(panel) {
-    // 导出配置
-    const exportBtn = panel.querySelector('#exportBtn');
-    if (exportBtn) {
-      exportBtn.addEventListener('click', () => {
-        try {
-          const configStr = exportConfig();
-          const blob = new Blob([configStr], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `douyin_ui_customizer_${new Date().toISOString().split('T')[0]}.json`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          this.showNotification('配置导出成功！', 'success');
-        } catch (error) {
-          console.error('导出配置失败:', error);
-          this.showNotification('导出配置失败，请重试', 'error');
-        }
-      });
+  showToggleButton() {
+    let toggleButton = document.getElementById('douyin-customizer-toggle');
+    
+    if (!toggleButton) {
+      toggleButton = document.createElement('button');
+      toggleButton.id = 'douyin-customizer-toggle';
+      toggleButton.className = 'customizer-toggle';
+      toggleButton.style.position = 'fixed';
+      toggleButton.style.left = '20px';
+      toggleButton.style.bottom = '20px';
+      toggleButton.style.width = '50px';
+      toggleButton.style.height = '50px';
+      toggleButton.style.borderRadius = '50%';
+      toggleButton.style.border = 'none';
+      toggleButton.style.backgroundColor = '#ff0050';
+      toggleButton.style.color = 'white';
+      toggleButton.style.fontSize = '16px';
+      toggleButton.style.cursor = 'pointer';
+      toggleButton.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+      toggleButton.style.zIndex = '9998';
+      toggleButton.style.display = 'flex';
+      toggleButton.style.alignItems = 'center';
+      toggleButton.style.justifyContent = 'center';
+      toggleButton.innerHTML = '⚙️';
+      
+      document.body.appendChild(toggleButton);
     }
     
-    // 导入配置
-    const importBtn = panel.querySelector('#importBtn');
-    const importFile = panel.querySelector('#importFile');
-    if (importBtn && importFile) {
-      importBtn.addEventListener('click', () => {
-        if (importFile.files.length === 0) {
-          this.showNotification('请先选择要导入的配置文件', 'info');
-          return;
-        }
-        
-        const file = importFile.files[0];
-        if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-          this.showNotification('请选择JSON格式的配置文件', 'error');
-          return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const success = importConfig(e.target.result);
-            if (success) {
-              this.showNotification('配置导入成功，正在重新加载...', 'success');
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            } else {
-              this.showNotification('配置导入失败，请检查文件格式', 'error');
-            }
-          } catch (error) {
-            console.error('导入配置失败:', error);
-            this.showNotification('导入配置失败，请检查文件内容', 'error');
-          }
-        };
-        reader.readAsText(file);
-      });
+    toggleButton.style.display = 'flex';
+    
+    toggleButton.addEventListener('click', () => {
+      this.settingsPanel.style.display = 'block';
+      toggleButton.style.display = 'none';
+    });
+  }
+
+  /**
+   * 初始化UI管理器
+   */
+  init() {
+    // 等待页面加载完成
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.initUI());
+    } else {
+      this.initUI();
     }
   }
-  
+
   /**
-   * 保存设置
-   * @param {HTMLElement} panel - 设置面板元素
+   * 初始化UI
    */
-  saveSettings(panel) {
-    try {
-      // 保存通用设置
-      const themeRadios = panel.querySelectorAll('input[name="theme"]:checked');
-      this.config.theme = themeRadios.length > 0 ? themeRadios[0].value : 'light';
-      
-      if (!this.config.general) {
-        this.config.general = {};
-      }
-      this.config.general.autoPlay = panel.querySelector('#autoPlay')?.checked || false;
-      this.config.general.autoScroll = panel.querySelector('#autoScroll')?.checked || false;
-      this.config.general.keyboardShortcuts = panel.querySelector('#keyboardShortcuts')?.checked || false;
-      this.config.general.notifications = panel.querySelector('#notifications')?.checked || false;
-      
-      // 保存短视频设置
-      if (!this.config.videoUI) {
-        this.config.videoUI = {};
-      }
-      this.config.videoUI.showLikeButton = panel.querySelector('#showLikeButton')?.checked || false;
-      this.config.videoUI.showCommentButton = panel.querySelector('#showCommentButton')?.checked || false;
-      this.config.videoUI.showShareButton = panel.querySelector('#showShareButton')?.checked || false;
-      this.config.videoUI.showAuthorInfo = panel.querySelector('#showAuthorInfo')?.checked || false;
-      this.config.videoUI.showMusicInfo = panel.querySelector('#showMusicInfo')?.checked || false;
-      this.config.videoUI.showDescription = panel.querySelector('#showDescription')?.checked || false;
-      this.config.videoUI.showRecommendations = panel.querySelector('#showRecommendations')?.checked || false;
-      
-      if (!this.config.videoUI.controlBar) {
-        this.config.videoUI.controlBar = {};
-      }
-      this.config.videoUI.controlBar.show = panel.querySelector('#controlBarShow')?.checked || false;
-      this.config.videoUI.controlBar.autoHide = panel.querySelector('#controlBarAutoHide')?.checked || false;
-      this.config.videoUI.controlBar.position = panel.querySelector('#controlBarPosition')?.value || 'bottom';
-      
-      // 保存直播间设置
-      if (!this.config.liveUI) {
-        this.config.liveUI = {};
-      }
-      this.config.liveUI.showGifts = panel.querySelector('#showGifts')?.checked || false;
-      this.config.liveUI.showDanmaku = panel.querySelector('#showDanmaku')?.checked || false;
-      this.config.liveUI.showRecommendations = panel.querySelector('#showRecommendations')?.checked || false;
-      this.config.liveUI.showAds = panel.querySelector('#showAds')?.checked || false;
-      this.config.liveUI.showStats = panel.querySelector('#showStats')?.checked || false;
-      
-      if (!this.config.liveUI.danmaku) {
-        this.config.liveUI.danmaku = {};
-      }
-      this.config.liveUI.danmaku.fontSize = parseInt(panel.querySelector('#danmakuFontSize')?.value) || 16;
-      this.config.liveUI.danmaku.color = panel.querySelector('#danmakuColor')?.value || '#FFFFFF';
-      this.config.liveUI.danmaku.opacity = parseFloat(panel.querySelector('#danmakuOpacity')?.value) || 0.8;
-      this.config.liveUI.danmaku.speed = panel.querySelector('#danmakuSpeed')?.value || 'medium';
-      
-      // 保存配置
-      saveConfig(this.config);
-      
-      // 为确保配置完全保存，添加一个小延迟后再应用设置
-      setTimeout(() => {
-        // 应用新设置
-        if (typeof injectStyles === 'function') {
-          injectStyles(this.config.theme);
-        }
-        
-        // 强制重新应用UI定制
-        if (typeof isVideoPage === 'function' && isVideoPage()) {
-          // 清除现有样式并重新应用
-          const customStyle = document.getElementById('douyin-ui-customizer-custom');
-          if (customStyle) {
-            customStyle.remove();
-          }
-          this.applyVideoCustomizations();
-        }
-        if (typeof isLivePage === 'function' && isLivePage()) {
-          // 清除现有样式并重新应用
-          const customStyle = document.getElementById('douyin-ui-customizer-custom');
-          if (customStyle) {
-            customStyle.remove();
-          }
-          this.applyLiveCustomizations();
-        }
-        
-        // 显示保存成功提示
-        this.showNotification('设置已成功保存并应用！', 'success');
-        
-        // 延迟关闭设置面板，给用户时间看到提示
-        setTimeout(() => {
-          panel.remove();
-        }, 1000);
-      }, 100);
-    } catch (error) {
-      console.error('保存设置失败:', error);
-      this.showNotification('保存设置失败，请重试', 'error');
-    }
+  initUI() {
+    this.initSettingsPanel();
+    this.showToggleButton();
+    
+    // 定期检查页面元素并应用定制
+    setInterval(() => {
+      this.applyVideoCustomizations();
+      this.applyLiveCustomizations();
+    }, 1000);
   }
 }
+
+// 导出UIManager类
+export default UIManager;
 
 // 模块分隔符
 
