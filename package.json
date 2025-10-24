@@ -5,6 +5,12 @@
   "main": "src/main.js",
   "scripts": {
     "build": "node build.js",
+    "build:patch": "node build.js patch",
+    "build:minor": "node build.js minor",
+    "build:major": "node build.js major",
+    "version:patch": "node build.js patch --increment",
+    "version:minor": "node build.js minor --increment",
+    "version:major": "node build.js major --increment",
     "test": "echo \"No test specified\" && exit 0"
   },
   "keywords": [

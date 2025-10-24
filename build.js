@@ -2,7 +2,76 @@ const fs = require('fs');
 const path = require('path');
 
 // 读取package.json获取版本信息
-const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+const pkgPath = path.join(__dirname, 'package.json');
+let pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+
+// 版本号管理工具类
+class VersionManager {
+  constructor(packageData, packagePath) {
+    this.packageData = packageData;
+    this.packagePath = packagePath;
+    this.currentVersion = packageData.version;
+  }
+
+  // 解析版本号为数组 [major, minor, patch]
+  parseVersion(version) {
+    return version.split('.').map(Number);
+  }
+
+  // 将版本数组格式化为字符串
+  formatVersion(versionArray) {
+    return versionArray.join('.');
+  }
+
+  // 更新补丁版本号 (x.x.Z)
+  incrementPatch() {
+    const [major, minor, patch] = this.parseVersion(this.currentVersion);
+    this.currentVersion = this.formatVersion([major, minor, patch + 1]);
+    return this.currentVersion;
+  }
+
+  // 更新小版本号 (x.Y.z)
+  incrementMinor() {
+    const [major, minor, patch] = this.parseVersion(this.currentVersion);
+    this.currentVersion = this.formatVersion([major, minor + 1, 0]);
+    return this.currentVersion;
+  }
+
+  // 更新主版本号 (X.y.z)
+  incrementMajor() {
+    const [major, minor, patch] = this.parseVersion(this.currentVersion);
+    this.currentVersion = this.formatVersion([major + 1, 0, 0]);
+    return this.currentVersion;
+  }
+
+  // 根据类型更新版本号
+  increment(versionType = 'patch') {
+    switch (versionType) {
+      case 'major':
+        return this.incrementMajor();
+      case 'minor':
+        return this.incrementMinor();
+      case 'patch':
+      default:
+        return this.incrementPatch();
+    }
+  }
+
+  // 保存版本号到package.json
+  save() {
+    this.packageData.version = this.currentVersion;
+    fs.writeFileSync(this.packagePath, JSON.stringify(this.packageData, null, 2), 'utf8');
+    return this.currentVersion;
+  }
+
+  // 获取当前版本号
+  getVersion() {
+    return this.currentVersion;
+  }
+}
+
+// 创建版本管理器实例
+const versionManager = new VersionManager(pkg, pkgPath);
 
 // 日志函数
 function log(message, level = 'info') {
@@ -57,6 +126,19 @@ function generateUserscriptHeader() {
 
 // 构建脚本
 async function build() {
+  // 从命令行参数获取版本更新类型
+  const versionType = process.argv[2] || 'patch';
+  let shouldIncrementVersion = process.argv.includes('--increment') || 
+                             (process.argv[2] && ['major', 'minor', 'patch'].includes(process.argv[2]));
+
+  // 如果指定了版本更新类型，自动递增版本号
+  if (shouldIncrementVersion) {
+    const newVersion = versionManager.increment(versionType);
+    versionManager.save();
+    log(`版本号已更新：${pkg.version} -> ${newVersion}`, 'info');
+    // 重新读取更新后的package.json
+    pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  }
   const startTime = Date.now();
   log('开始构建...');
   
@@ -144,6 +226,14 @@ async function build() {
     // 生成最终脚本
     const header = generateUserscriptHeader();
     let finalScript = header + "\n\n" + combinedJS;
+    
+    // 添加构建时间信息
+    const buildTime = new Date().toISOString();
+    finalScript = finalScript.replace(/const CURRENT_VERSION = '[^']+'/, 
+      `const CURRENT_VERSION = '${pkg.version}';\nconst BUILD_TIME = '${buildTime}';`);
+    
+    // 添加构建元数据注释
+     finalScript = finalScript + `\n\n/*\n * 构建信息\n * 版本: ${pkg.version}\n * 构建时间: ${buildTime}\n * 构建类型: ${shouldIncrementVersion ? versionType : 'none'}\n */`;
     
     // 简单的语法修复
     finalScript = finalScript.replace(/\{\s*,/g, '{');
