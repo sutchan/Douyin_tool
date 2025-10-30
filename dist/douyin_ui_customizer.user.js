@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         抖音UI定制器
 // @namespace    https://github.com/sutchan/douyin_tool
-// @version      1.0.124
+// @version      1.0.125
 // @description  自定义抖音界面，提供暗黑模式和UI调整
 // @author       Sut
 // @match        https://www.douyin.com/*
@@ -1601,7 +1601,8 @@ export default UIManager;
 const { getItem, setItem } = require('./utils/storage.js');
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.124';
+const CURRENT_VERSION = '1.0.125';
+const BUILD_TIME = '2025-10-27T04:13:56.832Z';;
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
@@ -2076,3 +2077,10 @@ setInterval(() => {
     ensureInit();
   }
 }, 1000);
+
+/*
+ * 构建信息
+ * 版本: 1.0.125
+ * 构建时间: 2025-10-27T04:13:56.832Z
+ * 构建类型: none
+ */

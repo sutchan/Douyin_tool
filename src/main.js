@@ -23,7 +23,7 @@
 const { getItem, setItem } = require('./utils/storage.js');
 
 // 当前脚本版本
-const CURRENT_VERSION = '1.0.83';
+const CURRENT_VERSION = '1.0.125';
 // 更新检查间隔（毫秒）
 const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 
