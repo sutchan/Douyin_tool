@@ -119,7 +119,7 @@ export class ButtonDetector {
     ];
 
     for (const structure of buttonStructures) {
-      const elements = findElementsByStructure(structure as any);
+      const elements = findElementsByStructure(structure);
       for (const element of elements) {
         const text = element.textContent || '';
         const trimmedText = text.trim();
