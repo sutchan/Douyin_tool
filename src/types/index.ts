@@ -65,6 +65,29 @@ export interface AdvancedConfig {
 export interface AppConfig {
   version: string;
   theme: 'light' | 'dark';
+  // 短视频页面定制选项
+  hideTopBar?: boolean;
+  hideSidebar?: boolean;
+  miniPlayer?: boolean;
+  miniPlayerEnabled?: boolean;
+  hideComments?: boolean;
+  autoPlay?: boolean;
+  autoMute?: boolean;
+  // 直播间页面定制选项
+  hideLiveTopBar?: boolean;
+  hideLiveGift?: boolean;
+  hideLiveChat?: boolean;
+  liveGiftEnabled?: boolean;
+  liveChatEnabled?: boolean;
+  liveTopBarEnabled?: boolean;
+  // 通用
+  darkMode?: boolean;
+  autoApply?: boolean;
+  // 自定义样式与脚本
+  customStyles?: string;
+  customStylesEnabled?: boolean;
+  customScripts?: string;
+  customScriptsEnabled?: boolean;
   videoUI: VideoUIConfig;
   liveUI: LiveUIConfig;
   general: GeneralConfig;

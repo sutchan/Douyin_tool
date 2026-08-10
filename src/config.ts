@@ -1,89 +1,49 @@
-import { getItem, setItem, getNestedItem, setNestedItem, NamespacedStorage } from './utils/storage.ts';
-import logger from './utils/logger.ts';
-import eventEmitter from './utils/eventEmitter.ts';
+import { getItem, setItem, NamespacedStorage } from './utils/storage';
+import logger from './utils/logger';
+import eventEmitter from './utils/eventEmitter';
+import { version as APP_VERSION } from './version';
+import type { AppConfig } from './types';
 
 const configStorage = new NamespacedStorage('douyin_tool_config');
 
 const CONFIG_KEY = 'main';
-const CONFIG_VERSION = '2.0.3';
+const CONFIG_VERSION = APP_VERSION;
 
-interface DanmakuConfig {
-  fontSize: number;
-  color: string;
-  opacity: number;
-  speed: string;
-  position: string;
-  maxLines: number;
-}
-
-interface ControlBarConfig {
-  show: boolean;
-  autoHide: boolean;
-  position: string;
-  size: string;
-  opacity: number;
-}
-
-interface PlaybackConfig {
-  defaultQuality: string;
-  autoPlay: boolean;
-  loop: boolean;
-}
-
-interface VideoUIConfig {
-  showLikeButton: boolean;
-  showCommentButton: boolean;
-  showShareButton: boolean;
-  showAuthorInfo: boolean;
-  showMusicInfo: boolean;
-  showDescription: boolean;
-  showRecommendations: boolean;
-  layout: string;
-  controlBar: ControlBarConfig;
-  playback: PlaybackConfig;
-}
-
-interface LiveUIConfig {
-  showGifts: boolean;
-  showDanmaku: boolean;
-  showRecommendations: boolean;
-  showAds: boolean;
-  showStats: boolean;
-  danmaku: DanmakuConfig;
-  layout: string;
-  volume: number;
-}
-
-interface GeneralConfig {
-  autoPlay: boolean;
-  autoScroll: boolean;
-  keyboardShortcuts: boolean;
-  notifications: boolean;
-  language: string;
-  animations: boolean;
-  updateCheck: boolean;
-}
-
-interface AdvancedConfig {
-  debugMode: boolean;
-  performanceMode: boolean;
-  customCSS: string;
-  customScripts: string[];
-}
-
-export interface Config {
-  version: string;
-  theme: string;
-  videoUI: VideoUIConfig;
-  liveUI: LiveUIConfig;
-  general: GeneralConfig;
-  advanced: AdvancedConfig;
+// 配置权威类型：与 types/index.ts 的 AppConfig 保持一致（含索引签名以支持动态键）
+export interface Config extends AppConfig {
   [key: string]: unknown;
 }
 
 const DEFAULT_CONFIG: Config = {
   version: CONFIG_VERSION,
   theme: 'light',
+
+  // 短视频页面定制选项
+  hideTopBar: false,
+  hideSidebar: false,
+  miniPlayer: true,
+  miniPlayerEnabled: true,
+  hideComments: false,
+  autoPlay: true,
+  autoMute: false,
+
+  // 直播间页面定制选项
+  hideLiveTopBar: false,
+  hideLiveGift: false,
+  hideLiveChat: false,
+  liveGiftEnabled: true,
+  liveChatEnabled: true,
+  liveTopBarEnabled: true,
+
+  // 通用
+  darkMode: false,
+  autoApply: true,
+
+  // 自定义样式与脚本
+  customStyles: '',
+  customStylesEnabled: false,
+  customScripts: '',
+  customScriptsEnabled: false,
 
   videoUI: {
     showLikeButton: true,

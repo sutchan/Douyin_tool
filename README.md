@@ -6,7 +6,7 @@
 [![GitHub forks](https://img.shields.io/github/forks/SutChan/douyin_tool?style=flat-square)](https://github.com/SutChan/douyin_tool/network/members)
 [![License](https://img.shields.io/github/license/SutChan/douyin_tool?style=flat-square)](https://github.com/SutChan/douyin_tool/blob/main/LICENSE)
 [![Tampermonkey](https://img.shields.io/badge/Tampermonkey-Compatible-green?style=flat-square)](https://www.tampermonkey.net/)
-[![Version](https://img.shields.io/badge/version-2.0.4-blue.svg?style=flat-square)](./package.json)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg?style=flat-square)](./package.json)
 
 ## 功能
 
@@ -26,6 +26,7 @@
 ### 通用功能
 - **拖拽设置面板** - 随意拖动调整位置
 - **导入导出设置** - 备份和恢复你的配置
+- **多语言支持** - 界面支持中文 / English 实时切换
 - **自动更新** - 有新版本时自动提醒
 - **性能监控** - 实时监控脚本性能表现
 
@@ -78,6 +79,12 @@
 2. 在「通用设置」中找到主题选项
 3. 选择「浅色」或「深色」模式
 
+### 切换语言
+
+1. 打开设置面板
+2. 在「通用设置」中找到语言选项
+3. 选择「中文」或「English」，界面立即切换无需刷新
+
 ## 常见问题
 
 **Q: 安装后没反应？**
@@ -107,6 +114,30 @@
 
 遇到问题或有功能建议？
 👉 [GitHub Issues](https://github.com/SutChan/douyin_tool/issues)
+
+## 技术架构
+
+项目采用 TypeScript 模块化架构，核心目录结构：
+
+```
+src/
+├── main.ts              # 入口：单例初始化，DOM 就绪后一次性启动
+├── index.ts             # 库入口：聚合导出供打包复用
+├── config.ts            # 配置管理（加载/保存/导入导出/迁移/校验）
+├── version.ts           # 集中版本号，全模块统一引用
+├── i18n/                # 国际化（中/英实时切换）
+├── ui_manager/          # UIManager 单例 + 主题/保存子模块
+├── ui/                  # 设置面板与短视频/直播间定制逻辑
+│   ├── panels/          # 面板、事件、拖拽
+│   └── customizations/  # 视频、直播界面定制
+├── controllers/         # 元素/布局控制器
+├── utils/               # dom / logger / storage / autoExecutor 等工具
+└── types/               # 全局类型定义
+```
+
+- **单例初始化**：`main.ts` 通过 `DOMContentLoaded` 一次性初始化，避免重复执行。
+- **多语言**：`i18n` 模块支持 `zh-CN` / `en-US`，切换语言即时生效。
+- **职责拆分**：主题应用、表单保存、DOM 工具均独立成模块，单文件保持单一职责。
 
 ## 许可证
 

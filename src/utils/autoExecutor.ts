@@ -1,7 +1,12 @@
+// src/utils/autoExecutor.ts v2.1.0
+// 自动执行控制器：检测并点击页面按钮，支持重试、节流与紧急停止。
+// 纯辅助函数拆分至 ./autoExecutor/helpers，主文件仅保留编排逻辑。
+
 import { debounce, throttle, getElement, getElements, findElementsByClassPattern, findElementsByStructure } from './dom';
 import logger from './logger';
 import eventEmitter from './eventEmitter';
 import buttonDetector from './buttonDetector';
+import { getElementSelector, captureScreenshot } from './autoExecutor/helpers';
 
 interface RetryConfig {
   maxAttempts: number;
@@ -99,7 +104,6 @@ class AutoExecutor {
       logger.info('AutoExecutor started');
     }
 
-    this.isEmergencyStopped = false;
     this.detectAndClick();
 
     this.checkIntervalId = setInterval(() => {
@@ -156,14 +160,14 @@ class AutoExecutor {
       if (button) {
         if (this.isButtonClickable(button)) {
           if (this.options.captureScreenshots) {
-            this.captureScreenshot('before_click');
+            captureScreenshot('before_click');
           }
 
           this.clickButton(button);
 
           if (this.options.captureScreenshots) {
             setTimeout(() => {
-              this.captureScreenshot('after_click');
+              captureScreenshot('after_click');
             }, 500);
           }
 
@@ -215,7 +219,9 @@ class AutoExecutor {
 
   private isButtonClickable(button: HTMLElement): boolean {
     if (!button) return false;
-    if (('disabled' in button && (button as any).disabled) || button.hasAttribute('disabled')) return false;
+    const disabledAttr = button.getAttribute('disabled');
+    const disabledProp = (button as HTMLButtonElement).disabled;
+    if (disabledAttr !== null || disabledProp === true) return false;
     if (button.style.display === 'none' || button.style.visibility === 'hidden') return false;
 
     const rect = button.getBoundingClientRect();
@@ -253,7 +259,7 @@ class AutoExecutor {
       this.executionHistory.push({
         timestamp: new Date().toISOString(),
         buttonText: button.textContent || button.innerText || 'Unknown',
-        buttonSelector: this.getElementSelector(button),
+        buttonSelector: getElementSelector(button),
         success: true
       });
 
@@ -266,14 +272,14 @@ class AutoExecutor {
       eventEmitter.emit('autoExecutor.buttonClicked', {
         button,
         text: button.textContent || button.innerText,
-        selector: this.getElementSelector(button)
+        selector: getElementSelector(button)
       });
     } catch (error) {
       const err = error as Error;
       this.executionHistory.push({
         timestamp: new Date().toISOString(),
         buttonText: button.textContent || button.innerText || 'Unknown',
-        buttonSelector: this.getElementSelector(button),
+        buttonSelector: getElementSelector(button),
         success: false,
         error: err.message
       });
@@ -288,54 +294,6 @@ class AutoExecutor {
         button,
         error
       });
-    }
-  }
-
-  private getElementSelector(element: HTMLElement | null): string {
-    if (!element) return '';
-
-    try {
-      if (element.id) {
-        return `#${element.id}`;
-      }
-
-      if (element.className && typeof element.className === 'string') {
-        const classes = element.className.trim().split(/\s+/);
-        for (const cls of classes) {
-          if (document.querySelectorAll(`.${cls}`).length === 1) {
-            return `.${cls}`;
-          }
-        }
-      }
-
-      const path: string[] = [];
-      let current: HTMLElement | null = element;
-
-      while (current && current.tagName) {
-        let selector = current.tagName.toLowerCase();
-
-        if (current.className && typeof current.className === 'string') {
-          const classes = current.className.trim().split(/\s+/);
-          selector += '.' + classes.join('.');
-        }
-
-        path.unshift(selector);
-        current = current.parentElement;
-      }
-
-      return path.join(' > ');
-    } catch {
-      return element.tagName.toLowerCase();
-    }
-  }
-
-  private captureScreenshot(type: string): void {
-    try {
-      if (typeof HTMLCanvasElement !== 'undefined') {
-        logger.info(`AutoExecutor capturing screenshot: ${type}`);
-      }
-    } catch (error) {
-      logger.error('AutoExecutor failed to capture screenshot:', error);
     }
   }
 

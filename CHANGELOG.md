@@ -1,5 +1,19 @@
 # 抖音UI定制器版本历史
 
+## 2.1.0 (2026-08-10)
+
+- 新增国际化（i18n）模块，支持中英文界面实时切换
+- 重构 UI 层：设置面板与定制逻辑拆分为独立子模块
+  - `ui/panels`（设置面板、事件、拖拽）
+  - `ui/customizations`（短视频、直播间定制）
+- 拆分 `UIManager` 单例职责：`themeApplier`（主题/弹幕/控制栏）、`settingsSaver`（表单保存）
+- 新增 `utils/dom` 工具（元素缓存、事件、结构查找），供 UI 与定制逻辑复用
+- 拆分 `autoExecutor` 辅助逻辑至 `utils/autoExecutor/helpers`
+- 新增集中版本管理 `src/version.ts`，所有模块从此导入版本号
+- `main.ts` 改为单例初始化（DOMContentLoaded 一次性触发，移除轮询与重复执行）
+- 配置导入新增安全解析（防御 `__proto__`/`constructor` 原型污染）
+- 同步所有文件版本号至 v2.1.0
+
 ## 2.0.4 (2026-06-08)
 
 - 修复 README.md 徽章链接语法错误
