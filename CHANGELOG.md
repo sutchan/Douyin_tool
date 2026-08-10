@@ -1,5 +1,18 @@
 # 抖音UI定制器版本历史
 
+## 2.2.0 (2026-08-10)
+
+- **重构（refactor）**: 继续拆分超 200 行文件为单一职责子模块
+  - `config.ts` → `configCore.ts`、`configDefaults.ts`（配置核心逻辑与默认项抽离）
+  - `controllers/elementController.ts` → `controllers/elementHelpers.ts`
+  - `controllers/layoutController.ts` → `controllers/layoutDefaults.ts`、`controllers/layoutHelpers.ts`
+  - `styles/theme.ts` → `styles/defaultThemes.ts`、`styles/themeIO.ts`、`styles/themeManager.ts`、`styles/themeOperations.ts`、`styles/themeTypes.ts`
+  - `ui_manager.ts` → `ui_manager/customAsset.ts`、`ui_manager/injectStyles.ts`
+  - `utils/autoExecutor.ts` → `utils/autoExecutorClicker.ts`、`utils/autoExecutorDetection.ts`、`utils/autoExecutorTypes.ts`
+  - `utils/performance.ts` → `utils/performanceMonitor.ts`、`utils/performanceReporting.ts`、`utils/performanceTypes.ts`
+- **规范（style）**: 主文件仅保留编排逻辑，re-export 子模块，导出契约稳定
+- **chore**: 同步所有文件版本号至 v2.2.0
+
 ## 2.1.0 (2026-08-10)
 
 - **重构（refactor）**: 统一单一入口，消除 `main.ts` 与 `index.ts` 双入口重复初始化冲突

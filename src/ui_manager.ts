@@ -7,12 +7,14 @@ import type { Config } from './config';
 import { getConfig, setConfig } from './config';
 import logger from './utils/logger';
 import eventEmitter from './utils/eventEmitter';
-import { findElementsByClassPattern } from './utils/dom';
+import { findElementsByClassPattern, findElementsByStructure } from './utils/dom';
 import { applyVideoCustomizations as applyVideo } from './ui/customizations/videoCustomizations';
 import { applyLiveCustomizations as applyLive } from './ui/customizations/liveCustomizations';
 import { renderSettingsPanel } from './ui_manager/panelRenderer';
 import { applyTheme, customizeControlBar, customizeDanmaku } from './ui_manager/themeApplier';
 import { makePanelDraggable } from './ui/core/panelDrag';
+import { injectCustomizerStyles } from './ui_manager/injectStyles';
+import { applyCustomStyles, applyCustomScripts } from './ui_manager/customAsset';
 import AutoTestController from './controllers/autoTestController';
 import { t } from './i18n';
 
@@ -59,20 +61,7 @@ class UIManagerImpl {
   }
 
   private injectStyles(): void {
-    if (document.getElementById('douyin-customizer-styles')) return;
-    const style = document.createElement('style');
-    style.id = 'douyin-customizer-styles';
-    style.textContent = `
-      .dy-settings-panel { position: fixed; top: 20px; right: 20px; width: 340px; max-height: 90vh;
-        overflow-y: auto; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 9999; padding: 16px; font-family: -apple-system, sans-serif; }
-      .dy-settings-panel h2 { margin: 0 0 12px; font-size: 18px; }
-      .dy-settings-panel .dy-section { border-bottom: 1px solid #eee; padding: 10px 0; }
-      .dy-settings-panel label { display: block; margin: 6px 0; font-size: 13px; }
-      .dy-toggle-btn { position: fixed; top: 60px; right: 20px; z-index: 9998; background: #fe2c55;
-        color: #fff; border: none; border-radius: 20px; padding: 8px 14px; cursor: pointer; font-size: 13px; }
-    `;
-    document.head.appendChild(style);
+    injectCustomizerStyles();
   }
 
   public showToggleButton(): void {
@@ -120,36 +109,14 @@ class UIManagerImpl {
     return findElementsByClassPattern(pattern instanceof RegExp ? pattern.source : String(pattern));
   }
 
-  // 增强版结构查找（支持 attributes / children / text），供 customizations 模块使用
+  // 增强版结构查找（支持 attributes / children / text），委托给 dom 模块
   public findElementsByStructure(struct: {
     tagName?: string;
     attributes?: Record<string, string | RegExp>;
     children?: Array<{ tagName?: string; attributes?: Record<string, string | RegExp> }>;
     text?: string | RegExp;
   }): HTMLElement[] {
-    const results: HTMLElement[] = [];
-    const baseTag = struct.tagName || '*';
-    const candidates = Array.from(document.querySelectorAll(baseTag)) as HTMLElement[];
-    for (const el of candidates) {
-      if (struct.attributes) {
-        let ok = true;
-        for (const [attr, val] of Object.entries(struct.attributes)) {
-          const attrVal = el.getAttribute(attr) || '';
-          if (val instanceof RegExp) {
-            if (!val.test(attrVal)) { ok = false; break; }
-          } else if (!attrVal.includes(val)) { ok = false; break; }
-        }
-        if (!ok) continue;
-      }
-      if (struct.text) {
-        const content = el.textContent || '';
-        if (struct.text instanceof RegExp) {
-          if (!struct.text.test(content)) continue;
-        } else if (!content.includes(struct.text)) continue;
-      }
-      results.push(el);
-    }
-    return results;
+    return findElementsByStructure(struct);
   }
 
   public customizeControlBar(config: Config['videoUI']['controlBar']): void {
@@ -195,59 +162,13 @@ class UIManagerImpl {
     }
   }
 
-  // 自定义 CSS：textContent 注入，避免 innerHTML 注入风险
+  // 自定义 CSS / 脚本：委托 customAsset 模块（安全注入）
   public applyCustomStyles(css: string): void {
-    if (!css || typeof css !== 'string') {
-      logger.warn('自定义样式为空或类型错误，跳过应用');
-      return;
-    }
-    if (this.config.advanced?.performanceMode) {
-      logger.info('性能模式下跳过自定义样式');
-      return;
-    }
-    let styleElement = document.getElementById('douyin-custom-styles') as HTMLStyleElement | null;
-    if (!styleElement) {
-      styleElement = document.createElement('style');
-      styleElement.id = 'douyin-custom-styles';
-      document.head.appendChild(styleElement);
-    }
-    styleElement.textContent = css;
-    eventEmitter.emit('ui.customStyles.applied', css);
+    applyCustomStyles(css, this.config);
   }
 
-  // 自定义脚本：仅允许远程 <script src> 或受控内联，禁止 eval/innerHTML 等危险操作
   public applyCustomScripts(scripts: string): void {
-    if (!scripts || typeof scripts !== 'string') {
-      logger.warn('自定义脚本为空或类型错误，跳过应用');
-      return;
-    }
-    if (this.config.advanced?.performanceMode) {
-      logger.info('性能模式下跳过自定义脚本');
-      return;
-    }
-    const lines = scripts.split('\n').map(s => s.trim()).filter(Boolean);
-    for (const script of lines) {
-      if (/eval\(|Function\(|innerHTML|document\.write|execScript/.test(script)) {
-        logger.error('检测到危险脚本片段，已拒绝执行：', script);
-        continue;
-      }
-      try {
-        const el = document.createElement('script');
-        el.id = 'douyin-custom-script';
-        el.dataset.douyinCustom = 'true';
-        if (script.startsWith('http://') || script.startsWith('https://')) {
-          el.src = script;
-        } else {
-          el.textContent = script;
-          el.dataset.inline = 'true';
-        }
-        document.head.appendChild(el);
-        logger.info('已应用自定义脚本');
-        eventEmitter.emit('ui.customScripts.applied', script);
-      } catch (error) {
-        logger.error('应用自定义脚本失败:', error);
-      }
-    }
+    applyCustomScripts(scripts, this.config);
   }
 
   public persistConfig(): void {

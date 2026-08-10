@@ -1,44 +1,18 @@
 // src/utils/autoExecutor.ts v2.1.0
 // 自动执行控制器：检测并点击页面按钮，支持重试、节流与紧急停止。
-// 纯辅助函数拆分至 ./autoExecutor/helpers，主文件仅保留编排逻辑。
+// 纯类型拆分至 ./autoExecutorTypes，检测/点击纯函数拆分至 ./autoExecutorDetection 与 ./autoExecutorClicker，
+// 辅助函数拆分至 ./autoExecutor/helpers，主文件仅保留编排逻辑与类外壳。
 
 import { debounce, throttle, getElement, getElements, findElementsByClassPattern, findElementsByStructure } from './dom';
 import logger from './logger';
 import eventEmitter from './eventEmitter';
 import buttonDetector from './buttonDetector';
 import { getElementSelector, captureScreenshot } from './autoExecutor/helpers';
+import { detectButton, isButtonClickable } from './autoExecutorDetection';
+import { clickButton } from './autoExecutorClicker';
+import type { AutoExecutorOptions, RetryConfig, ExecutionRecord, ButtonClickEvent } from './autoExecutorTypes';
 
-interface RetryConfig {
-  maxAttempts: number;
-  initialDelay: number;
-  backoffFactor: number;
-}
-
-interface AutoExecutorOptions {
-  detectionStrategies?: string[];
-  retryConfig?: RetryConfig;
-  checkInterval?: number;
-  enabled?: boolean;
-  customDetector?: () => HTMLElement | null;
-  confirmationRequired?: boolean;
-  enableLogging?: boolean;
-  captureScreenshots?: boolean;
-  maxHistorySize?: number;
-}
-
-interface ExecutionRecord {
-  timestamp: string;
-  buttonText: string;
-  buttonSelector: string;
-  success: boolean;
-  error?: string;
-}
-
-interface ButtonClickEvent {
-  button: HTMLElement;
-  text: string | null;
-  selector: string;
-}
+export type { AutoExecutorOptions, RetryConfig, ExecutionRecord, ButtonClickEvent } from './autoExecutorTypes';
 
 class AutoExecutor {
   private options: Required<AutoExecutorOptions>;
@@ -155,15 +129,15 @@ class AutoExecutor {
     try {
       this.currentAttempt++;
 
-      const button = await this.detectButton();
+      const button = await detectButton(this.options, this.options.enableLogging);
 
       if (button) {
-        if (this.isButtonClickable(button)) {
+        if (isButtonClickable(button)) {
           if (this.options.captureScreenshots) {
             captureScreenshot('before_click');
           }
 
-          this.clickButton(button);
+          clickButton(button, this.options, this.executionHistory);
 
           if (this.options.captureScreenshots) {
             setTimeout(() => {
@@ -187,113 +161,6 @@ class AutoExecutor {
       }
 
       eventEmitter.emit('autoExecutor.error', { error });
-    }
-  }
-
-  private async detectButton(): Promise<HTMLElement | null> {
-    let button: HTMLElement | null = null;
-
-    if (this.options.customDetector) {
-      try {
-        button = this.options.customDetector();
-        if (button) {
-          if (this.options.enableLogging) {
-            logger.info('AutoExecutor detected button using custom detector');
-          }
-          return button;
-        }
-      } catch (error) {
-        if (this.options.enableLogging) {
-          logger.warn('AutoExecutor custom detector failed:', error);
-        }
-      }
-    }
-
-    const detectorOptions = {
-      detectionStrategies: this.options.detectionStrategies
-    };
-    button = buttonDetector.detect(detectorOptions);
-
-    return button;
-  }
-
-  private isButtonClickable(button: HTMLElement): boolean {
-    if (!button) return false;
-    const disabledAttr = button.getAttribute('disabled');
-    const disabledProp = (button as HTMLButtonElement).disabled;
-    if (disabledAttr !== null || disabledProp === true) return false;
-    if (button.style.display === 'none' || button.style.visibility === 'hidden') return false;
-
-    const rect = button.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return false;
-
-    if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) {
-      return false;
-    }
-
-    return true;
-  }
-
-  private compressHistory(): void {
-    if (this.executionHistory.length > this.options.maxHistorySize) {
-      this.executionHistory = this.executionHistory.slice(-this.options.maxHistorySize);
-
-      if (this.options.enableLogging) {
-        logger.info(`AutoExecutor compressed history to ${this.executionHistory.length} records`);
-      }
-    }
-  }
-
-  private clickButton(button: HTMLElement): void {
-    if (!button) return;
-
-    try {
-      const clickEvent = new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        view: window
-      });
-
-      button.dispatchEvent(clickEvent);
-
-      this.executionHistory.push({
-        timestamp: new Date().toISOString(),
-        buttonText: button.textContent || button.innerText || 'Unknown',
-        buttonSelector: getElementSelector(button),
-        success: true
-      });
-
-      this.compressHistory();
-
-      if (this.options.enableLogging) {
-        logger.info(`AutoExecutor clicked button: ${button.textContent || button.innerText}`);
-      }
-
-      eventEmitter.emit('autoExecutor.buttonClicked', {
-        button,
-        text: button.textContent || button.innerText,
-        selector: getElementSelector(button)
-      });
-    } catch (error) {
-      const err = error as Error;
-      this.executionHistory.push({
-        timestamp: new Date().toISOString(),
-        buttonText: button.textContent || button.innerText || 'Unknown',
-        buttonSelector: getElementSelector(button),
-        success: false,
-        error: err.message
-      });
-
-      this.compressHistory();
-
-      if (this.options.enableLogging) {
-        logger.error('AutoExecutor failed to click button:', error);
-      }
-
-      eventEmitter.emit('autoExecutor.buttonClickFailed', {
-        button,
-        error
-      });
     }
   }
 

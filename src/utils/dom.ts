@@ -81,21 +81,45 @@ export function findElementsByClassPattern(...classPatterns: string[]): HTMLElem
   }
 }
 
-export function findElementsByStructure(structure: { tag?: string; className?: string; text?: string }): HTMLElement[] {
+export function findElementsByStructure(structure: {
+  tag?: string;
+  tagName?: string;
+  className?: string;
+  text?: string | RegExp;
+  attributes?: Record<string, string | RegExp>;
+}): HTMLElement[] {
   try {
     const results: HTMLElement[] = [];
-    const selector = structure.tag ? structure.tag : '*';
-    const elements = document.querySelectorAll(selector);
-    elements.forEach(element => {
-      if (element instanceof HTMLElement) {
-        if (structure.className && !(element.className && element.className.includes(structure.className))) {
-          return;
-        }
-        if (structure.text && !element.textContent?.includes(structure.text)) {
-          return;
-        }
-        results.push(element);
+    const baseTag = structure.tagName || structure.tag || '*';
+    const candidates = document.querySelectorAll(baseTag);
+    candidates.forEach(element => {
+      if (!(element instanceof HTMLElement)) return;
+
+      if (structure.className && !(element.className && element.className.includes(structure.className))) {
+        return;
       }
+
+      if (structure.attributes) {
+        for (const [attr, val] of Object.entries(structure.attributes)) {
+          const attrVal = element.getAttribute(attr) || '';
+          if (val instanceof RegExp) {
+            if (!val.test(attrVal)) return;
+          } else if (!attrVal.includes(val)) {
+            return;
+          }
+        }
+      }
+
+      if (structure.text) {
+        const content = element.textContent || '';
+        if (structure.text instanceof RegExp) {
+          if (!structure.text.test(content)) return;
+        } else if (!content.includes(structure.text)) {
+          return;
+        }
+      }
+
+      results.push(element);
     });
     return results;
   } catch (error) {

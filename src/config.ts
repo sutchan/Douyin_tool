@@ -1,135 +1,44 @@
-import { getItem, setItem, NamespacedStorage } from './utils/storage';
+// src/config.ts v2.1.0
+// 配置管理器：负责配置的加载、读取、写入与状态维护。
+// 默认配置与常量拆分至 ./configDefaults，纯函数逻辑拆分至 ./configCore。
+
+import { NamespacedStorage } from './utils/storage';
 import logger from './utils/logger';
 import eventEmitter from './utils/eventEmitter';
-import { version as APP_VERSION } from './version';
-import type { AppConfig } from './types';
+import { CONFIG_KEY, CONFIG_VERSION, DEFAULT_CONFIG, type Config } from './configDefaults';
+import { mergeConfig, migrateConfig, validateConfig, getNestedItemFromConfig, safeJsonParse } from './configCore';
+
+export type { Config } from './configDefaults';
 
 const configStorage = new NamespacedStorage('douyin_tool_config');
-
-const CONFIG_KEY = 'main';
-const CONFIG_VERSION = APP_VERSION;
-
-// 配置权威类型：与 types/index.ts 的 AppConfig 保持一致（含索引签名以支持动态键）
-export interface Config extends AppConfig {
-  [key: string]: unknown;
-}
-
-const DEFAULT_CONFIG: Config = {
-  version: CONFIG_VERSION,
-  theme: 'light',
-  language: 'zh-CN',
-
-  // 短视频页面定制选项
-  hideTopBar: false,
-  hideSidebar: false,
-  miniPlayer: true,
-  miniPlayerEnabled: true,
-  hideComments: false,
-  autoPlay: true,
-  autoMute: false,
-
-  // 直播间页面定制选项
-  hideLiveTopBar: false,
-  hideLiveGift: false,
-  hideLiveChat: false,
-  liveGiftEnabled: true,
-  liveChatEnabled: true,
-  liveTopBarEnabled: true,
-
-  // 通用
-  darkMode: false,
-  autoApply: true,
-
-  // 自定义样式与脚本
-  customStyles: '',
-  customStylesEnabled: false,
-  customScripts: '',
-  customScriptsEnabled: false,
-
-  videoUI: {
-    showLikeButton: true,
-    showCommentButton: true,
-    showShareButton: true,
-    showAuthorInfo: true,
-    showMusicInfo: true,
-    showDescription: true,
-    showRecommendations: true,
-    layout: 'default',
-    controlBar: {
-      show: true,
-      autoHide: true,
-      position: 'bottom',
-      size: 'medium',
-      opacity: 0.9
-    },
-    playback: {
-      defaultQuality: 'auto',
-      autoPlay: true,
-      loop: false
-    }
-  },
-
-  liveUI: {
-    showGifts: true,
-    showDanmaku: true,
-    showRecommendations: true,
-    showAds: false,
-    showStats: true,
-    danmaku: {
-      fontSize: 16,
-      color: '#FFFFFF',
-      opacity: 0.8,
-      speed: 'medium',
-      position: 'top',
-      maxLines: 5
-    },
-    layout: 'default',
-    volume: 100
-  },
-
-  general: {
-    autoPlay: true,
-    autoScroll: false,
-    keyboardShortcuts: true,
-    notifications: false,
-    language: 'zh-CN',
-    animations: true,
-    updateCheck: true
-  },
-
-  advanced: {
-    debugMode: false,
-    performanceMode: false,
-    customCSS: '',
-    customScripts: []
-  }
-};
 
 let currentConfig: Config | null = null;
 
 export function loadConfig(): Config {
   try {
-    const savedConfig = configStorage.getItem(CONFIG_KEY);
+    const savedConfig = configStorage.getJSON<Config>(CONFIG_KEY, null as unknown as Config);
 
     if (savedConfig) {
       logger.info('[抖音工具] 加载已保存的配置');
-      const loadedConfig = migrateConfig(savedConfig as Config);
-      currentConfig = mergeConfig(loadedConfig, DEFAULT_CONFIG);
-      currentConfig.version = CONFIG_VERSION;
+      const loadedConfig = migrateConfig(savedConfig);
+      const validatedConfig = validateConfig(loadedConfig);
+      if (!validatedConfig.valid) {
+        logger.warn('[抖音工具] 配置校验未通过:', validatedConfig.issues);
+      }
+      currentConfig = loadedConfig;
+      eventEmitter.emit('config.loaded', { config: currentConfig });
     } else {
-      logger.info('[抖音工具] 使用默认配置');
+      logger.info('[抖音工具] 未找到已保存配置，使用默认配置');
       currentConfig = { ...DEFAULT_CONFIG };
+      eventEmitter.emit('config.loaded', { config: currentConfig });
     }
-
-    saveConfig(currentConfig);
-
-    return currentConfig;
   } catch (error) {
-    logger.error('[抖音工具] 加载配置失败：', error);
-    eventEmitter.emit('config.error', { type: 'load', error });
+    logger.error('[抖音工具] 加载配置失败，使用默认配置：', error);
     currentConfig = { ...DEFAULT_CONFIG };
-    return currentConfig;
+    eventEmitter.emit('config.error', { type: 'load', error });
   }
+
+  return currentConfig;
 }
 
 export const defaultConfig: Config = { ...DEFAULT_CONFIG };
@@ -159,79 +68,24 @@ export function updateConfig(partial: Partial<Config>): boolean {
   }
 }
 
-export function setConfig(key: string | Partial<Config>, value?: unknown): boolean {
+export function setConfig(config: Config): boolean {
   try {
-    if (!currentConfig) {
-      loadConfig();
-    }
-
-    if (typeof key === 'object') {
-      currentConfig = mergeConfig(key, currentConfig!);
-    } else {
-      if (key.includes('.')) {
-        setNestedConfig(key, value);
-      } else {
-        (currentConfig as Record<string, unknown>)[key] = value;
-      }
-    }
-
-    currentConfig!.version = CONFIG_VERSION;
-
-    saveConfig(currentConfig!);
-
+    currentConfig = config;
+    currentConfig.version = CONFIG_VERSION;
+    saveConfig(currentConfig);
+    eventEmitter.emit('config.set', { config: currentConfig });
+    logger.info('[抖音工具] 配置已设置');
     return true;
   } catch (error) {
     logger.error('[抖音工具] 设置配置失败：', error);
-    eventEmitter.emit('config.error', { type: 'set', error, key, value });
+    eventEmitter.emit('config.error', { type: 'set', error });
     return false;
   }
 }
 
-function setNestedConfig(path: string, value: unknown): void {
-  const keys = path.split('.');
-  let obj: Record<string, unknown> = currentConfig as Record<string, unknown>;
-
-  for (let i = 0; i < keys.length - 1; i++) {
-    const key = keys[i];
-    if (!obj[key] || typeof obj[key] !== 'object') {
-      obj[key] = {};
-    }
-    obj = obj[key] as Record<string, unknown>;
-  }
-
-  obj[keys[keys.length - 1]] = value;
-}
-
-export function getConfigValue<T = unknown>(path: string, defaultValue?: T): T {
-  if (!currentConfig) {
-    loadConfig();
-  }
-
-  if (path.includes('.')) {
-    return getNestedItemFromConfig(path, defaultValue) as T;
-  }
-
-  const value = (currentConfig as Record<string, unknown>)[path];
-  return value !== undefined ? (value as T) : defaultValue as T;
-}
-
-function getNestedItemFromConfig(path: string, defaultValue: unknown): unknown {
-  const keys = path.split('.');
-  let obj: Record<string, unknown> = currentConfig as Record<string, unknown>;
-
-  for (const key of keys) {
-    if (obj === null || obj === undefined || typeof obj !== 'object' || !(key in obj)) {
-      return defaultValue;
-    }
-    obj = obj[key] as Record<string, unknown>;
-  }
-
-  return obj;
-}
-
 export function saveConfig(config: Config): boolean {
   try {
-    configStorage.setItem(CONFIG_KEY, config);
+    configStorage.setJSON(CONFIG_KEY, config);
     logger.info('[抖音工具] 配置已保存');
     eventEmitter.emit('config.saved', { config });
     return true;
@@ -245,7 +99,7 @@ export function saveConfig(config: Config): boolean {
 export function resetConfig(): Config {
   try {
     currentConfig = { ...DEFAULT_CONFIG };
-    configStorage.setItem(CONFIG_KEY, currentConfig);
+    configStorage.setJSON(CONFIG_KEY, currentConfig);
     logger.info('[抖音工具] 配置已重置为默认值');
     eventEmitter.emit('config.reset', { config: currentConfig });
     return currentConfig;
@@ -256,52 +110,17 @@ export function resetConfig(): Config {
   }
 }
 
-function mergeConfig(userConfig: Partial<Config>, defaultConfig: Config): Config {
-  const merged = { ...defaultConfig };
-
-  for (const key in userConfig) {
-    if (Object.prototype.hasOwnProperty.call(userConfig, key)) {
-      const userValue = userConfig[key];
-      const defaultVal = defaultConfig[key];
-      
-      if (typeof userValue === 'object' && userValue !== null &&
-        typeof defaultVal === 'object' && defaultVal !== null &&
-        !Array.isArray(userValue) && !Array.isArray(defaultVal)) {
-        merged[key] = mergeConfig(
-          userValue as Partial<Config>,
-          defaultVal as Config
-        );
-      } else {
-        merged[key] = userValue;
-      }
-    }
+export function getConfigValue<T = unknown>(path: string, defaultValue?: T): T {
+  if (!currentConfig) {
+    loadConfig();
   }
 
-  return merged;
-}
-
-function migrateConfig(oldConfig: Config): Config {
-  if (!oldConfig.version || oldConfig.version !== CONFIG_VERSION) {
-    logger.info(`[抖音工具] 执行配置迁移: ${oldConfig.version || 'unknown'} -> ${CONFIG_VERSION}`);
-    eventEmitter.emit('config.migrating', {
-      fromVersion: oldConfig.version || 'unknown',
-      toVersion: CONFIG_VERSION
-    });
-
-    if (!oldConfig.advanced) {
-      oldConfig.advanced = DEFAULT_CONFIG.advanced;
-    }
-
-    if (!oldConfig.videoUI.playback) {
-      oldConfig.videoUI.playback = DEFAULT_CONFIG.videoUI.playback;
-    }
-
-    if (!oldConfig.liveUI.danmaku.maxLines) {
-      oldConfig.liveUI.danmaku.maxLines = DEFAULT_CONFIG.liveUI.danmaku.maxLines;
-    }
+  if (path.includes('.')) {
+    return getNestedItemFromConfig(currentConfig as Record<string, unknown>, path) as T ?? defaultValue as T;
   }
 
-  return oldConfig;
+  const value = (currentConfig as Record<string, unknown>)[path];
+  return value !== undefined ? (value as T) : defaultValue as T;
 }
 
 export function exportConfig(): string {
@@ -315,32 +134,6 @@ export function exportConfig(): string {
     eventEmitter.emit('config.error', { type: 'export', error });
     return '{}';
   }
-}
-
-function safeJsonParse<T = unknown>(input: string): T {
-  const parsed = JSON.parse(input) as T;
-  const seen = new WeakSet();
-  const sanitize = (value: unknown): unknown => {
-    if (value === null || typeof value !== 'object') {
-      return value;
-    }
-    if (Array.isArray(value)) {
-      return value.map(sanitize);
-    }
-    if (seen.has(value as object)) {
-      return undefined;
-    }
-    seen.add(value as object);
-    const result: Record<string, unknown> = {};
-    for (const key of Object.keys(value as Record<string, unknown>)) {
-      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
-        continue;
-      }
-      result[key] = sanitize((value as Record<string, unknown>)[key]);
-    }
-    return result;
-  };
-  return sanitize(parsed) as T;
 }
 
 export function importConfig(jsonString: string): boolean {
@@ -363,42 +156,6 @@ export function importConfig(jsonString: string): boolean {
     eventEmitter.emit('config.error', { type: 'import', error });
     return false;
   }
-}
-
-export function validateConfig(config: Partial<Config>): { valid: boolean; issues: string[] } {
-  const issues: string[] = [];
-
-  try {
-    if (config.theme && !['light', 'dark'].includes(config.theme)) {
-      issues.push('主题配置无效，应为 light 或 dark');
-    }
-
-    if (config.videoUI?.layout && !['default', 'compact', 'fullscreen'].includes(config.videoUI.layout)) {
-      issues.push('视频界面布局配置无效');
-    }
-
-    if (config.liveUI?.layout && !['default', 'minimal', 'immersive'].includes(config.liveUI.layout)) {
-      issues.push('直播间界面布局配置无效');
-    }
-
-    if (config.liveUI?.danmaku?.fontSize && (config.liveUI.danmaku.fontSize < 12 || config.liveUI.danmaku.fontSize > 36)) {
-      issues.push('弹幕字体大小应在 12-36 之间');
-    }
-
-    if (config.liveUI?.danmaku?.opacity && (config.liveUI.danmaku.opacity < 0.1 || config.liveUI.danmaku.opacity > 1)) {
-      issues.push('弹幕透明度应在 0.1-1 之间');
-    }
-
-  } catch (error) {
-    logger.error('[抖音工具] 验证配置失败：', error);
-    eventEmitter.emit('config.error', { type: 'validate', error });
-    issues.push('配置验证过程中发生错误');
-  }
-
-  return {
-    valid: issues.length === 0,
-    issues
-  };
 }
 
 const initialized = loadConfig();

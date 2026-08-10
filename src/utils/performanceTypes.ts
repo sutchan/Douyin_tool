@@ -48,3 +48,79 @@ export interface PerformanceManagerConfig {
   enableMemoryMonitoring?: boolean;
   enableLongTaskMonitoring?: boolean;
 }
+
+// 以下为 PerformanceMonitor 实现内部依赖的浏览器/自定义类型
+export interface PerformanceMonitorOptions {
+  enableFpsMonitor?: boolean;
+  enableMemoryMonitor?: boolean;
+  sampleInterval?: number;
+}
+
+export interface MemoryInfo {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+  usedPercent?: number;
+}
+
+export interface MemoryRecord {
+  timestamp: number;
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
+export interface PerformanceHealth {
+  isHealthy: boolean;
+  fpsHealthy: boolean;
+  memoryHealthy: boolean;
+  currentFps: number;
+  averageFps: number;
+  memoryUsage: string;
+}
+
+export interface WatchResult {
+  stop: () => void;
+}
+
+export interface FpsMetric {
+  timestamp: number;
+  value: number;
+}
+
+export interface MemoryMetric {
+  timestamp: number;
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
+export interface MemoryMetrics {
+  timestamp: number;
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
+// 以下为 PerformanceMonitor 内部使用的指标记录类型
+export interface FpsRecord {
+  timestamp: number;
+  value: number;
+}
+
+export interface ExecutionTimeRecord {
+  timestamp: number;
+  duration: number;
+}
+
+export interface RenderTimeRecord {
+  timestamp: number;
+  duration: number;
+}
+
+export interface PerformanceMetrics {
+  fps: FpsRecord[];
+  memory: MemoryRecord[];
+  executionTimes: Record<string, ExecutionTimeRecord[]>;
+  renderTimes: RenderTimeRecord[];
+}

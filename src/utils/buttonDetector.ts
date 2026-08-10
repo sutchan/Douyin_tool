@@ -110,7 +110,7 @@ export class ButtonDetector {
   }
 
   private detectByStructure(): HTMLElement | null {
-    const buttonStructures = [
+    const buttonStructures: Array<{ tagName: string; attributes?: Record<string, string | RegExp> }> = [
       { tagName: 'button' },
       { tagName: 'input', attributes: { type: 'button' } },
       { tagName: 'input', attributes: { type: 'submit' } },

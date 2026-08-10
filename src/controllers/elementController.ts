@@ -1,16 +1,11 @@
+// src/controllers/elementController.ts v2.1.0
+// 元素控制器：隐藏/显示/切换/修改/重置页面元素样式，并维护原始样式缓存。
+// 纯函数与类型拆分至 ./elementHelpers，主文件保留状态编排与类外壳。
+
 import logger from '../utils/logger';
-import { getElement, getElements } from '../utils/dom';
+import { resolveElements, collectInteractiveElements, type ElementInfo, type OriginalStyle } from './elementHelpers';
 
-interface ElementInfo {
-  id: string;
-  selector: string;
-  type: string;
-  description: string;
-}
-
-interface OriginalStyle {
-  [key: string]: string;
-}
+export type { ElementInfo, OriginalStyle } from './elementHelpers';
 
 class ElementController {
   private originalStyles: WeakMap<HTMLElement, OriginalStyle>;
@@ -24,8 +19,8 @@ class ElementController {
 
   async hideElement(selector: string | HTMLElement): Promise<boolean> {
     try {
-      const elements = this._resolveElements(selector);
-      
+      const elements = resolveElements(selector);
+
       if (elements.length === 0) {
         logger.warn(`没有找到匹配的元素: ${selector}`);
         return false;
@@ -33,17 +28,17 @@ class ElementController {
 
       for (const element of elements) {
         this._saveOriginalStyle(element);
-        
+
         element.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
         element.style.opacity = '0';
         element.style.transform = 'translateY(-10px)';
         element.style.pointerEvents = 'none';
-        
+
         this.elementVisibility.set(element, false);
       }
 
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       for (const element of elements) {
         element.style.display = 'none';
       }
@@ -58,8 +53,8 @@ class ElementController {
 
   async showElement(selector: string | HTMLElement): Promise<boolean> {
     try {
-      const elements = this._resolveElements(selector);
-      
+      const elements = resolveElements(selector);
+
       if (elements.length === 0) {
         logger.warn(`没有找到匹配的元素: ${selector}`);
         return false;
@@ -67,24 +62,24 @@ class ElementController {
 
       for (const element of elements) {
         element.style.display = '';
-        
+
         element.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
         element.style.opacity = '0';
         element.style.transform = 'translateY(-10px)';
       }
 
       await new Promise(resolve => setTimeout(resolve, 10));
-      
+
       for (const element of elements) {
         element.style.opacity = '1';
         element.style.transform = 'translateY(0)';
         element.style.pointerEvents = '';
-        
+
         this.elementVisibility.set(element, true);
       }
 
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       for (const element of elements) {
         element.style.transition = '';
       }
@@ -99,16 +94,16 @@ class ElementController {
 
   async toggleElement(selector: string | HTMLElement): Promise<boolean> {
     try {
-      const elements = this._resolveElements(selector);
-      
+      const elements = resolveElements(selector);
+
       if (elements.length === 0) {
         logger.warn(`没有找到匹配的元素: ${selector}`);
         return false;
       }
 
       const firstElement = elements[0];
-      const currentVisibility = this.elementVisibility.get(firstElement) !== false && 
-                               firstElement.style.display !== 'none';
+      const currentVisibility = this.elementVisibility.get(firstElement) !== false &&
+        firstElement.style.display !== 'none';
       const targetVisibility = !currentVisibility;
 
       if (targetVisibility) {
@@ -126,8 +121,8 @@ class ElementController {
 
   modifyElementStyle(selector: string | HTMLElement, styles: Record<string, string>): boolean {
     try {
-      const elements = this._resolveElements(selector);
-      
+      const elements = resolveElements(selector);
+
       if (elements.length === 0) {
         logger.warn(`没有找到匹配的元素: ${selector}`);
         return false;
@@ -151,8 +146,8 @@ class ElementController {
 
   resetElementStyle(selector: string | HTMLElement): boolean {
     try {
-      const elements = this._resolveElements(selector);
-      
+      const elements = resolveElements(selector);
+
       if (elements.length === 0) {
         logger.warn(`没有找到匹配的元素: ${selector}`);
         return false;
@@ -161,13 +156,13 @@ class ElementController {
       for (const element of elements) {
         if (this.originalStyles.has(element)) {
           const originalStyle = this.originalStyles.get(element);
-          
+
           element.removeAttribute('style');
-          
+
           if (originalStyle) {
             Object.assign(element.style, originalStyle);
           }
-          
+
           this.originalStyles.delete(element);
           this.elementVisibility.delete(element);
         } else {
@@ -185,55 +180,7 @@ class ElementController {
 
   identifyElements(): ElementInfo[] {
     try {
-      const elements: ElementInfo[] = [];
-      let elementId = 1;
-
-      const buttons = getElements('button, [role="button"], .btn, .button, .action');
-      buttons.forEach(button => {
-        const selector = this._generateSelector(button);
-        const description = button.textContent?.trim() || button.getAttribute('aria-label') || '按钮';
-        elements.push({
-          id: `btn_${elementId++}`,
-          selector: selector,
-          type: 'button',
-          description: description
-        });
-      });
-
-      const inputs = getElements('input, textarea, select');
-      inputs.forEach(input => {
-        const selector = this._generateSelector(input);
-        const label = this._getElementLabel(input);
-        elements.push({
-          id: `input_${elementId++}`,
-          selector: selector,
-          type: 'input',
-          description: label || '输入框'
-        });
-      });
-
-      const containers = getElements('.container, .wrapper, .section, .card, .panel');
-      containers.forEach(container => {
-        const selector = this._generateSelector(container);
-        elements.push({
-          id: `container_${elementId++}`,
-          selector: selector,
-          type: 'container',
-          description: `容器 - ${container.classList.value}`
-        });
-      });
-
-      const videoElements = getElements('video, .video, .player');
-      videoElements.forEach(video => {
-        const selector = this._generateSelector(video);
-        elements.push({
-          id: `video_${elementId++}`,
-          selector: selector,
-          type: 'video',
-          description: '视频元素'
-        });
-      });
-
+      const elements = collectInteractiveElements();
       logger.info(`成功识别 ${elements.length} 个可操作元素`);
       return elements;
     } catch (error) {
@@ -242,70 +189,17 @@ class ElementController {
     }
   }
 
-  private _resolveElements(selector: string | HTMLElement): HTMLElement[] {
-    if (!selector) {
-      return [];
-    }
-
-    if (typeof selector === 'string') {
-      return getElements(selector);
-    } else if (selector.nodeType === 1) {
-      return [selector];
-    }
-
-    return [];
-  }
-
   private _saveOriginalStyle(element: HTMLElement): void {
     if (!this.originalStyles.has(element)) {
       const originalStyle: OriginalStyle = {};
-      
+
       const importantProperties = ['display', 'opacity', 'transform', 'pointer-events'];
       importantProperties.forEach(prop => {
-        originalStyle[prop] = (element.style as any)[prop];
+        originalStyle[prop] = (element.style as unknown as Record<string, string>)[prop];
       });
-      
+
       this.originalStyles.set(element, originalStyle);
     }
-  }
-
-  private _generateSelector(element: HTMLElement): string {
-    if (!element) return '';
-
-    if (element.id) {
-      return `#${element.id}`;
-    }
-
-    const specificClasses = Array.from(element.classList).filter(cls => 
-      /^(btn|input|card|panel|container|video)/i.test(cls)
-    );
-    if (specificClasses.length > 0) {
-      return `.${specificClasses[0]}`;
-    }
-
-    const tagName = element.tagName.toLowerCase();
-    const siblings = element.parentNode ? Array.from(element.parentNode.children) : [];
-    const index = siblings.indexOf(element);
-    
-    if (siblings.length > 1) {
-      return `${tagName}:nth-child(${index + 1})`;
-    }
-
-    return tagName;
-  }
-
-  private _getElementLabel(element: HTMLElement): string | null {
-    const id = element.id;
-    if (id) {
-      const label = getElement(`label[for="${id}"]`);
-      if (label) return label.textContent.trim();
-    }
-
-    if (element.closest('label')) {
-      return element.closest('label')!.textContent.trim();
-    }
-
-    return element.getAttribute('placeholder') || element.getAttribute('name') || null;
   }
 }
 
