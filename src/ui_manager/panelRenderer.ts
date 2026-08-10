@@ -107,6 +107,12 @@ export function buildTestingSection(config: Config): HTMLElement {
   autoApplyLabel.appendChild(autoApplyInput);
   autoApplyLabel.appendChild(document.createTextNode(t('settings.testing.autoApply')));
   wrap.appendChild(autoApplyLabel);
+
+  const testBtn = document.createElement('button');
+  testBtn.id = 'dy-run-test-btn';
+  testBtn.textContent = t('settings.testing.autoTest');
+  testBtn.style.cssText = 'margin-top:8px;width:100%;background:#333;color:#fff;border:none;border-radius:4px;padding:8px;cursor:pointer;';
+  wrap.appendChild(testBtn);
   return wrap;
 }
 
@@ -133,6 +139,27 @@ export function renderSettingsPanel(panel: HTMLElement, uiManager: UIManager): v
   panel.appendChild(buildSection('live', t('settings.hideLiveTopBar'), buildLiveSection(config)));
   panel.appendChild(buildSection('custom', t('settings.customStyles'), buildCustomSection(config)));
   panel.appendChild(buildSection('testing', t('settings.testing.title'), buildTestingSection(config)));
+
+  const testBtn = panel.querySelector('#dy-run-test-btn') as HTMLButtonElement | null;
+  if (testBtn) {
+    testBtn.addEventListener('click', async () => {
+      testBtn.disabled = true;
+      const status = panel.querySelector('#dy-test-status');
+      try {
+        const result = await uiManager.runAutoTest();
+        const msg = result.success ? t('test.passed') : t('test.failed');
+        if (status) status.textContent = `${msg} (${result.steps.length})`;
+      } catch (e) {
+        if (status) status.textContent = t('test.failed');
+      } finally {
+        testBtn.disabled = false;
+      }
+    });
+  }
+  const statusEl = document.createElement('div');
+  statusEl.id = 'dy-test-status';
+  statusEl.style.cssText = 'margin-top:6px;font-size:12px;color:#666;';
+  panel.appendChild(statusEl);
 
   const saveBtn = document.createElement('button');
   saveBtn.id = 'dy-save-btn';

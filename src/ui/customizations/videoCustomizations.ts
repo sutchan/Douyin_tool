@@ -1,6 +1,5 @@
-import { findElementsByClassPattern, findElementsByStructure, toggleElements } from '../../utils/dom';
 import logger from '../../utils/logger';
-import type UIManager from '../../ui_manager';
+import type { UIManager } from '../../ui_manager';
 
 export function applyVideoCustomizations(uiManager: UIManager): void {
   logger.info('[UI定制] 开始应用短视频界面定制');

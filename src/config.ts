@@ -17,6 +17,7 @@ export interface Config extends AppConfig {
 const DEFAULT_CONFIG: Config = {
   version: CONFIG_VERSION,
   theme: 'light',
+  language: 'zh-CN',
 
   // 短视频页面定制选项
   hideTopBar: false,

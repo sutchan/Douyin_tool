@@ -1,6 +1,5 @@
-import { findElementsByClassPattern, findElementsByStructure } from '../../utils/dom';
 import logger from '../../utils/logger';
-import type UIManager from '../../ui_manager';
+import type { UIManager } from '../../ui_manager';
 
 export function applyLiveCustomizations(uiManager: UIManager): void {
   logger.info('应用直播间界面定制');

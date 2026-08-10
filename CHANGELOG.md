@@ -2,17 +2,28 @@
 
 ## 2.1.0 (2026-08-10)
 
-- 新增国际化（i18n）模块，支持中英文界面实时切换
-- 重构 UI 层：设置面板与定制逻辑拆分为独立子模块
-  - `ui/panels`（设置面板、事件、拖拽）
-  - `ui/customizations`（短视频、直播间定制）
-- 拆分 `UIManager` 单例职责：`themeApplier`（主题/弹幕/控制栏）、`settingsSaver`（表单保存）
-- 新增 `utils/dom` 工具（元素缓存、事件、结构查找），供 UI 与定制逻辑复用
-- 拆分 `autoExecutor` 辅助逻辑至 `utils/autoExecutor/helpers`
-- 新增集中版本管理 `src/version.ts`，所有模块从此导入版本号
-- `main.ts` 改为单例初始化（DOMContentLoaded 一次性触发，移除轮询与重复执行）
-- 配置导入新增安全解析（防御 `__proto__`/`constructor` 原型污染）
-- 同步所有文件版本号至 v2.1.0
+- **重构（refactor）**: 统一单一入口，消除 `main.ts` 与 `index.ts` 双入口重复初始化冲突
+  - `main.ts` 改为单例初始化（DOMContentLoaded 一次性触发，移除 setInterval 轮询与重复执行）
+  - `index.ts` 降级为纯库 re-export，不再初始化或重复暴露全局对象
+- **新增（feat）**: 国际化（i18n）系统，支持中文 / English 界面实时切换
+  - 新增 `src/i18n` 模块，集中字典 + `t()`/`setLocale()`，所有 UI 文案接入
+- **重构（refactor）**: 拆分超 200 行文件为合理模块，单一职责
+  - `ui_manager.ts` → `ui_manager/panelRenderer.ts`、`ui_manager/themeApplier.ts`、`ui_manager/settingsSaver.ts`
+  - `utils/dom.ts`(433行) → `dom/cache.ts`、`dom/events.ts`、`dom/factory.ts`、`dom/styleOps.ts`
+  - `utils/autoExecutor.ts`(372行) → `autoExecutor/helpers.ts`
+- **修复（fix）**: 消除 UI 重复创建（移除冗余固定面板，统一悬浮按钮 + 弹窗模式）
+- **修复（fix）**: 类型与一致性错误
+  - `config.ts` 修正 `.ts` 扩展名 import、移除不存在的 `getNestedItem/setNestedItem` 引用、版本号从 `version.ts` 导入
+  - `types/index.ts` 的 `AppConfig` 扩展为权威配置类型，统一 `Config` 与之对齐
+- **安全（fix）**: 自定义脚本/样式注入加固
+  - 自定义 CSS 改用 `textContent` 注入，避免 `innerHTML` 注入
+  - 自定义脚本禁止 `eval`/`Function`/`innerHTML`/`document.write`，仅允许远程 `<script src>` 或受控内联
+  - `storage.ts` 在非浏览器环境安全降级为内存存储（规避 `localStorage` ReferenceError）
+- **修复（fix）**: 移除 `autoExecutor` 中的 `as any`，改为类型安全判断
+- **规范（style）**: 所有 UI 容器补充语义化 `id`（面板、悬浮按钮、区块、复选框、保存按钮等）
+- **chore**: 新增集中版本管理 `src/version.ts`；同步所有文件版本号至 v2.1.0
+- **test**: 新增 jest 测试套件（`tests/*.test.ts`），覆盖 i18n / config / storage / utils / version 核心逻辑
+- 对齐 `openspec` 规范文档版本至 2.1.0
 
 ## 2.0.4 (2026-06-08)
 

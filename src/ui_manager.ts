@@ -12,6 +12,8 @@ import { applyVideoCustomizations as applyVideo } from './ui/customizations/vide
 import { applyLiveCustomizations as applyLive } from './ui/customizations/liveCustomizations';
 import { renderSettingsPanel } from './ui_manager/panelRenderer';
 import { applyTheme, customizeControlBar, customizeDanmaku } from './ui_manager/themeApplier';
+import { makePanelDraggable } from './ui/core/panelDrag';
+import AutoTestController from './controllers/autoTestController';
 import { t } from './i18n';
 
 class UIManagerImpl {
@@ -95,6 +97,7 @@ class UIManagerImpl {
         document.body.appendChild(panel);
         this.settingsPanel = panel;
         renderSettingsPanel(panel, this as unknown as UIManager);
+        makePanelDraggable(panel);
       }
       panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
       eventEmitter.emit('ui.panel.toggled', panel.style.display !== 'none');
@@ -249,6 +252,12 @@ class UIManagerImpl {
 
   public persistConfig(): void {
     setConfig(this.config);
+  }
+
+  // 运行一次自动化测试（自检 UI 自定义项是否正常应用）
+  public async runAutoTest(): Promise<{ success: boolean; steps: string[] }> {
+    const controller = new AutoTestController();
+    return controller.runAutoTest();
   }
 }
 

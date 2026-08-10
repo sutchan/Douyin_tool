@@ -1,37 +1,16 @@
 import { getElement, getElements, findElementsByStructure } from './dom';
 import logger from './logger';
+import { ButtonDetectorOptions, DEFAULT_BUTTON_TEXTS, DEFAULT_CSS_SELECTORS } from './buttonDetectorTypes';
 
-interface ButtonDetectorOptions {
-  buttonTexts?: string[];
-  cssSelectors?: string[];
-  enableLogging?: boolean;
-}
+export type { ButtonDetectorOptions } from './buttonDetectorTypes';
 
 export class ButtonDetector {
   private options: ButtonDetectorOptions;
 
   constructor(options: ButtonDetectorOptions = {}) {
     this.options = {
-      buttonTexts: ['Continue', 'Run', 'Execute', 'Next', 'Proceed', 'Start', '继续', '运行', '执行', '下一步', '开始'],
-      cssSelectors: [
-        'button:contains(Continue)',
-        'button:contains(Run)',
-        'button:contains(Execute)',
-        'button:contains(Next)',
-        'button:contains(Proceed)',
-        'button:contains(Start)',
-        'button:contains(继续)',
-        'button:contains(运行)',
-        'button:contains(执行)',
-        'button:contains(下一步)',
-        'button:contains(开始)',
-        '.button-primary',
-        '.btn-primary',
-        '[type="submit"]',
-        '.continue-button',
-        '.run-button',
-        '.execute-button'
-      ],
+      buttonTexts: DEFAULT_BUTTON_TEXTS,
+      cssSelectors: DEFAULT_CSS_SELECTORS,
       enableLogging: true,
       ...options
     };

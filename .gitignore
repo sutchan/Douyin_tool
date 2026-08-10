@@ -38,3 +38,6 @@ coverage/
 vite.config.js
 fix_advanced.js
 *.txt
+
+# 工具内部目录（工作记忆等，非项目源码）
+.codebuddy/

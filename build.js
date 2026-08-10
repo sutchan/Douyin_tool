@@ -105,9 +105,9 @@ async function buildUserScript() {
       console.log(`Output size: ${(result.outputFiles[0].text.length / 1024).toFixed(2)} KB`);
     } else {
       // esbuild 缺失时回退到 tsc 编译（仅作构建产物验证，不入 header）
-      console.warn('esbuild 未安装，回退使用 tsc 编译验证...');
+      console.log('esbuild 未安装，回退使用 tsc 编译验证...');
       const { execSync } = require('child_process');
-      execSync('npx tsc --outDir build/tsc-out --module esnext --target es2020 --moduleResolution bundler', { stdio: 'inherit' });
+      execSync('npx tsc --outDir build/tsc-out --module esnext --target es2020 --moduleResolution bundler --allowImportingTsExtensions false --declaration false', { stdio: 'pipe' });
       const compiled = path.join('build', 'tsc-out', 'main.js');
       if (!fs.existsSync(compiled)) {
         throw new Error('tsc 编译产物缺失: ' + compiled);
