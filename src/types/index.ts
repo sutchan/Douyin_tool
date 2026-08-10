@@ -65,6 +65,7 @@ export interface AdvancedConfig {
 export interface AppConfig {
   version: string;
   theme: 'light' | 'dark';
+  language: string;
   // 短视频页面定制选项
   hideTopBar?: boolean;
   hideSidebar?: boolean;

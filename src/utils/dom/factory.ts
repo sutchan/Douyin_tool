@@ -29,21 +29,24 @@ export function createElement<K extends keyof HTMLElementTagNameMap>(
   }
 }
 
-export function injectStyle(css: string, id: string): void {
+export function injectStyle(css: string, id?: string): HTMLStyleElement {
   try {
     if (!css || typeof css !== 'string') {
       logger.warn('injectStyle: css 为空或类型错误');
-      return;
+      return document.createElement('style');
     }
-    let styleElement = document.getElementById(id) as HTMLStyleElement | null;
+    const styleId = id || `dy-injected-style-${Date.now()}`;
+    let styleElement = document.getElementById(styleId) as HTMLStyleElement | null;
     if (!styleElement) {
       styleElement = document.createElement('style');
-      styleElement.id = id;
+      styleElement.id = styleId;
       document.head.appendChild(styleElement);
     }
     styleElement.textContent = css;
+    return styleElement;
   } catch (error) {
-    logger.error(`注入样式失败 (${id}):`, error);
+    logger.error(`注入样式失败 (${id ?? 'unknown'}):`, error);
+    return document.createElement('style');
   }
 }
 

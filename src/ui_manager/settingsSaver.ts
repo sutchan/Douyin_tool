@@ -21,11 +21,6 @@ function readCheckbox(panel: HTMLElement, id: string): boolean | null {
   return el ? el.checked : null;
 }
 
-function readValue(panel: HTMLElement, id: string): string | null {
-  const el = panel.querySelector(`#${id}`) as HTMLInputElement | null;
-  return el ? el.value : null;
-}
-
 // 从面板表单读取所有配置项并写入 config 对象
 export function collectSettingsFromPanel(panel: HTMLElement, config: Config): void {
   const themeRadio = panel.querySelector('input[type="radio"][name="theme"]:checked') as HTMLInputElement | null;

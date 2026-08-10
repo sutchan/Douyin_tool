@@ -1,40 +1,29 @@
 // src/ui_manager.ts v2.1.0
-// UI 管理器：单例。负责构建设置面板/悬浮按钮、应用视频与直播定制、自定义样式与脚本。
-// 主题与表单保存逻辑拆分至 ./ui_manager/themeApplier 与 ./ui_manager/settingsSaver，保持单一职责。
+// UI 管理器：单例。负责初始化、构建设置面板、应用视频/直播定制、自定义样式与脚本。
+// 面板渲染拆分至 ./ui_manager/panelRenderer，主题/表单逻辑拆分至 themeApplier/settingsSaver。
+// 具体页面元素查找与显隐逻辑委托给 ./ui/customizations/*。
 
 import type { Config } from './config';
-import { getConfig, saveConfig, setConfig } from './config';
+import { getConfig, setConfig } from './config';
 import logger from './utils/logger';
 import eventEmitter from './utils/eventEmitter';
+import { findElementsByClassPattern } from './utils/dom';
+import { applyVideoCustomizations as applyVideo } from './ui/customizations/videoCustomizations';
+import { applyLiveCustomizations as applyLive } from './ui/customizations/liveCustomizations';
+import { renderSettingsPanel } from './ui_manager/panelRenderer';
 import { applyTheme, customizeControlBar, customizeDanmaku } from './ui_manager/themeApplier';
-import { saveSettings } from './ui_manager/settingsSaver';
 import { t } from './i18n';
 
-class CustomizationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'CustomizationError';
-  }
-}
-
-// 声明 UIManager 类型供子模块使用（避免循环依赖时的类型导入）
-export type { UIManager };
-
 class UIManagerImpl {
-  private config: Config;
+  private _config: Config;
   private settingsPanel: HTMLElement | null = null;
   private toggleButton: HTMLElement | null = null;
   private isInitialized = false;
 
   constructor(config?: Config) {
-    this.config = config ?? getConfig();
+    this._config = config ?? getConfig();
   }
-}
 
-// 供子模块（themeApplier、settingsSaver）引用主类类型
-export type UIManager = UIManagerImpl;
-
-  // 单例访问：从全局配置读取，避免重复实例化
   public static getInstance(): UIManagerImpl {
     const g = window as unknown as { __douyinUIManager?: UIManagerImpl };
     if (!g.__douyinUIManager) {
@@ -43,8 +32,13 @@ export type UIManager = UIManagerImpl;
     return g.__douyinUIManager;
   }
 
+  // 供 customizations 模块访问配置
+  public get config(): Config {
+    return this._config;
+  }
+
   public getConfig(): Config {
-    return this.config;
+    return this._config;
   }
 
   public getSettingsPanel(): HTMLElement | null {
@@ -60,11 +54,6 @@ export type UIManager = UIManagerImpl;
     this.injectStyles();
     this.showToggleButton();
     logger.info('UIManager 初始化完成');
-  }
-
-  public initUI(): void {
-    this.showToggleButton();
-    this.showSettingsPanel();
   }
 
   private injectStyles(): void {
@@ -105,151 +94,91 @@ export type UIManager = UIManagerImpl;
         panel.style.display = 'none';
         document.body.appendChild(panel);
         this.settingsPanel = panel;
-        this.renderSettingsPanel(panel);
+        renderSettingsPanel(panel, this as unknown as UIManager);
       }
       panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
       eventEmitter.emit('ui.panel.toggled', panel.style.display !== 'none');
     } catch (error) {
       logger.error('显示设置面板失败:', error);
-      throw new CustomizationError('无法显示设置面板');
     }
   }
 
-  // 渲染面板内容（DOM 结构），文案通过 i18n 提供
-  private renderSettingsPanel(panel: HTMLElement): void {
-    panel.innerHTML = '';
-    const title = document.createElement('h2');
-    title.id = 'dy-panel-title';
-    title.textContent = t('settings.title');
-    panel.appendChild(title);
+  // ---- 视频 / 直播定制：委托给 customizations 模块 ----
 
-    const closeBtn = document.createElement('button');
-    closeBtn.id = 'dy-panel-close';
-    closeBtn.textContent = t('settings.close');
-    closeBtn.style.cssText = 'position:absolute;top:8px;right:8px;border:none;background:none;cursor:pointer;font-size:18px;';
-    closeBtn.addEventListener('click', () => {
-      if (this.settingsPanel) this.settingsPanel.style.display = 'none';
+  public toggleElement(finder: () => HTMLElement[], show: boolean | undefined): void {
+    if (show === undefined) return;
+    const elements = finder();
+    elements.forEach(el => {
+      el.style.display = show ? '' : 'none';
     });
-    panel.appendChild(closeBtn);
-
-    panel.appendChild(this.buildSection('theme', t('settings.theme'), this.buildThemeSection()));
-    panel.appendChild(this.buildSection('video', t('settings.miniPlayer'), this.buildVideoSection()));
-    panel.appendChild(this.buildSection('live', t('settings.hideLiveTopBar'), this.buildLiveSection()));
-    panel.appendChild(this.buildSection('custom', t('settings.customStyles'), this.buildCustomSection()));
-    panel.appendChild(this.buildSection('testing', t('settings.testing.title'), this.buildTestingSection()));
-
-    const saveBtn = document.createElement('button');
-    saveBtn.id = 'dy-save-btn';
-    saveBtn.textContent = t('settings.save');
-    saveBtn.style.cssText = 'margin-top:12px;width:100%;background:#fe2c55;color:#fff;border:none;border-radius:4px;padding:10px;cursor:pointer;';
-    saveBtn.addEventListener('click', async () => {
-      if (this.settingsPanel) await saveSettings(this as unknown as UIManager, this.settingsPanel);
-    });
-    panel.appendChild(saveBtn);
   }
 
-  private buildSection(id: string, heading: string, content: HTMLElement): HTMLElement {
-    const section = document.createElement('div');
-    section.id = `dy-section-${id}`;
-    section.className = 'dy-section';
-    const h = document.createElement('h3');
-    h.id = `dy-section-${id}-title`;
-    h.textContent = heading;
-    section.appendChild(h);
-    section.appendChild(content);
-    return section;
+  public findElementsByClassPattern(pattern: RegExp | string): HTMLElement[] {
+    return findElementsByClassPattern(pattern instanceof RegExp ? pattern.source : String(pattern));
   }
 
-  private buildThemeSection(): HTMLElement {
-    const wrap = document.createElement('div');
-    wrap.id = 'dy-theme-wrap';
-    ['light', 'dark'].forEach(value => {
-      const label = document.createElement('label');
-      label.id = `dy-theme-label-${value}`;
-      const input = document.createElement('input');
-      input.type = 'radio';
-      input.name = 'theme';
-      input.value = value;
-      input.checked = this.config.theme === value;
-      label.appendChild(input);
-      label.appendChild(document.createTextNode(value === 'light' ? t('theme.light') : t('theme.dark')));
-      wrap.appendChild(label);
-    });
-    return wrap;
+  // 增强版结构查找（支持 attributes / children / text），供 customizations 模块使用
+  public findElementsByStructure(struct: {
+    tagName?: string;
+    attributes?: Record<string, string | RegExp>;
+    children?: Array<{ tagName?: string; attributes?: Record<string, string | RegExp> }>;
+    text?: string | RegExp;
+  }): HTMLElement[] {
+    const results: HTMLElement[] = [];
+    const baseTag = struct.tagName || '*';
+    const candidates = Array.from(document.querySelectorAll(baseTag)) as HTMLElement[];
+    for (const el of candidates) {
+      if (struct.attributes) {
+        let ok = true;
+        for (const [attr, val] of Object.entries(struct.attributes)) {
+          const attrVal = el.getAttribute(attr) || '';
+          if (val instanceof RegExp) {
+            if (!val.test(attrVal)) { ok = false; break; }
+          } else if (!attrVal.includes(val)) { ok = false; break; }
+        }
+        if (!ok) continue;
+      }
+      if (struct.text) {
+        const content = el.textContent || '';
+        if (struct.text instanceof RegExp) {
+          if (!struct.text.test(content)) continue;
+        } else if (!content.includes(struct.text)) continue;
+      }
+      results.push(el);
+    }
+    return results;
   }
 
-  private buildVideoSection(): HTMLElement {
-    const wrap = document.createElement('div');
-    wrap.id = 'dy-video-wrap';
-    const items: [string, string][] = [
-      ['miniPlayer', t('settings.miniPlayer')],
-      ['hideTopBar', t('settings.hideTopBar')],
-      ['hideSidebar', t('settings.hideSidebar')],
-      ['hideComments', t('settings.hideComments')],
-      ['autoPlay', t('settings.autoPlay')],
-      ['autoMute', t('settings.autoMute')],
-    ];
-    items.forEach(([key, label]) => {
-      wrap.appendChild(this.buildCheckbox(key, label, Boolean(this.config[key as keyof Config])));
-    });
-    return wrap;
+  public customizeControlBar(config: Config['videoUI']['controlBar']): void {
+    customizeControlBar(this as unknown as UIManager, config);
   }
 
-  private buildLiveSection(): HTMLElement {
-    const wrap = document.createElement('div');
-    wrap.id = 'dy-live-wrap';
-    const items: [string, string][] = [
-      ['hideLiveTopBar', t('settings.hideLiveTopBar')],
-      ['hideLiveGift', t('settings.hideLiveGift')],
-      ['hideLiveChat', t('settings.hideLiveChat')],
-    ];
-    items.forEach(([key, label]) => {
-      wrap.appendChild(this.buildCheckbox(key, label, Boolean(this.config[key as keyof Config])));
-    });
-    return wrap;
+  public customizeDanmaku(config: Config['liveUI']['danmaku']): void {
+    customizeDanmaku(config);
   }
 
-  private buildCustomSection(): HTMLElement {
-    const wrap = document.createElement('div');
-    wrap.id = 'dy-custom-wrap';
-    const stylesLabel = document.createElement('label');
-    stylesLabel.id = 'dy-custom-styles-label';
-    stylesLabel.textContent = t('settings.customStyles');
-    const stylesArea = document.createElement('textarea');
-    stylesArea.id = 'advanced-customCSS';
-    stylesArea.value = this.config.customStyles || '';
-    stylesArea.rows = 4;
-    stylesArea.style.cssText = 'width:100%;font-family:monospace;';
-    stylesLabel.appendChild(stylesArea);
-    wrap.appendChild(stylesLabel);
-    return wrap;
+  public applyLayout(_type: string, _layout: string): void {
+    // 布局切换占位：具体实现可在此注入对应 CSS class
+    logger.info(`应用布局: ${_type} / ${_layout}`);
   }
 
-  private buildTestingSection(): HTMLElement {
-    const wrap = document.createElement('div');
-    wrap.id = 'dy-testing-wrap';
-    const autoApplyLabel = document.createElement('label');
-    autoApplyLabel.id = 'dy-testing-autoapply-label';
-    const autoApplyInput = document.createElement('input');
-    autoApplyInput.type = 'checkbox';
-    autoApplyInput.id = 'autoApply';
-    autoApplyInput.checked = Boolean(this.config.autoApply);
-    autoApplyLabel.appendChild(autoApplyInput);
-    autoApplyLabel.appendChild(document.createTextNode(t('settings.testing.autoApply')));
-    wrap.appendChild(autoApplyLabel);
-    return wrap;
+  public applyVideoCustomizations(): void {
+    try {
+      applyVideo(this as unknown as UIManager);
+      if (this.config.darkMode) applyTheme(this as unknown as UIManager, 'dark');
+      eventEmitter.emit('ui.video.applied', this.config.videoUI);
+    } catch (error) {
+      logger.error('应用视频定制失败:', error);
+    }
   }
 
-  private buildCheckbox(id: string, labelText: string, checked: boolean): HTMLElement {
-    const label = document.createElement('label');
-    label.id = `dy-checkbox-${id}`;
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.id = id;
-    input.checked = checked;
-    label.appendChild(input);
-    label.appendChild(document.createTextNode(labelText));
-    return label;
+  public applyLiveCustomizations(): void {
+    try {
+      applyLive(this as unknown as UIManager);
+      eventEmitter.emit('ui.live.applied', this.config.liveUI);
+    } catch (error) {
+      logger.error('应用直播定制失败:', error);
+    }
   }
 
   public applyAllCustomizations(): void {
@@ -261,39 +190,9 @@ export type UIManager = UIManagerImpl;
     if (this.config.customScriptsEnabled && this.config.customScripts) {
       this.applyCustomScripts(this.config.customScripts);
     }
-    this.injectStyles();
-    this.initUI();
-    eventEmitter.emit('ui.allCustomizations.applied', this.config);
   }
 
-  public applyVideoCustomizations(): void {
-    try {
-      const videoUI = this.config.videoUI || {};
-      if (videoUI.showLikeButton !== undefined) {
-        const likeBtn = document.querySelector('.like-button') as HTMLElement | null;
-        if (likeBtn) likeBtn.style.display = videoUI.showLikeButton ? '' : 'none';
-      }
-      if (videoUI.controlBar) customizeControlBar(this as unknown as UIManager, videoUI.controlBar);
-      if (this.config.darkMode) applyTheme(this as unknown as UIManager, 'dark');
-      eventEmitter.emit('ui.video.applied', videoUI);
-    } catch (error) {
-      logger.error('应用视频定制失败:', error);
-      throw new CustomizationError('视频定制应用失败');
-    }
-  }
-
-  public applyLiveCustomizations(): void {
-    try {
-      const liveUI = this.config.liveUI || {};
-      if (liveUI.danmaku) customizeDanmaku(liveUI.danmaku);
-      eventEmitter.emit('ui.live.applied', liveUI);
-    } catch (error) {
-      logger.error('应用直播定制失败:', error);
-      throw new CustomizationError('直播定制应用失败');
-    }
-  }
-
-  // 自定义 CSS：使用 textContent 注入（不执行脚本），避免 innerHTML 导致的注入风险
+  // 自定义 CSS：textContent 注入，避免 innerHTML 注入风险
   public applyCustomStyles(css: string): void {
     if (!css || typeof css !== 'string') {
       logger.warn('自定义样式为空或类型错误，跳过应用');
@@ -313,7 +212,7 @@ export type UIManager = UIManagerImpl;
     eventEmitter.emit('ui.customStyles.applied', css);
   }
 
-  // 自定义脚本：使用 <script> 元素加载远程脚本，禁止 eval/Function/innerHTML 注入，避免 XSS
+  // 自定义脚本：仅允许远程 <script src> 或受控内联，禁止 eval/innerHTML 等危险操作
   public applyCustomScripts(scripts: string): void {
     if (!scripts || typeof scripts !== 'string') {
       logger.warn('自定义脚本为空或类型错误，跳过应用');
@@ -330,26 +229,17 @@ export type UIManager = UIManagerImpl;
         continue;
       }
       try {
+        const el = document.createElement('script');
+        el.id = 'douyin-custom-script';
+        el.dataset.douyinCustom = 'true';
         if (script.startsWith('http://') || script.startsWith('https://')) {
-          const existing = document.querySelector(`script[data-douyin-custom][src="${script}"]`);
-          if (existing) continue;
-          const el = document.createElement('script');
-          el.id = 'douyin-custom-script';
-          el.dataset.douyinCustom = 'true';
           el.src = script;
-          document.head.appendChild(el);
-          logger.info('已加载远程自定义脚本：', script);
         } else {
-          const existing = document.querySelector(`script[data-douyin-custom][data-inline]`);
-          // 仅允许一次内联（避免重复堆叠），内联脚本以 textContent 注入
-          const el = document.createElement('script');
-          el.id = 'douyin-custom-script-inline';
-          el.dataset.douyinCustom = 'true';
-          el.dataset.inline = 'true';
           el.textContent = script;
-          document.head.appendChild(el);
-          logger.info('已注入内联自定义脚本');
+          el.dataset.inline = 'true';
         }
+        document.head.appendChild(el);
+        logger.info('已应用自定义脚本');
         eventEmitter.emit('ui.customScripts.applied', script);
       } catch (error) {
         logger.error('应用自定义脚本失败:', error);
@@ -365,3 +255,5 @@ export type UIManager = UIManagerImpl;
 const UIManager = UIManagerImpl;
 export default UIManager;
 export { UIManagerImpl };
+// 供子模块用作类型（与值同名 UIManager，分处类型/值空间）
+export type UIManager = UIManagerImpl;

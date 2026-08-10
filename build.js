@@ -1,6 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const esbuild = require('esbuild');
+let esbuild = null;
+try {
+  esbuild = require('esbuild');
+} catch (e) {
+  esbuild = null;
+}
 
 const CONFIG = {
   buildDir: 'build',
@@ -77,30 +82,40 @@ async function buildUserScript() {
 `;
 
     ensureDir(path.resolve(CONFIG.buildDir));
-
-    // 使用 esbuild 打包 TypeScript 代码
-    const result = await esbuild.build({
-      entryPoints: [CONFIG.entryFile],
-      bundle: true,
-      platform: 'browser',
-      format: 'iife',
-      target: ['es2020'],
-      write: false,
-      sourcemap: false,
-      minifyIdentifiers: false,
-      minifySyntax: false,
-      minifyWhitespace: false,
-      banner: {
-        js: metadata
-      },
-      logLevel: 'warning'
-    });
-
     const outputFile = path.join(CONFIG.buildDir, 'douyin_ui_customizer.user.js');
-    fs.writeFileSync(outputFile, result.outputFiles[0].text, 'utf-8');
 
-    console.log(`Build completed: ${outputFile}`);
-    console.log(`Output size: ${(result.outputFiles[0].text.length / 1024).toFixed(2)} KB`);
+    if (esbuild) {
+      // 使用 esbuild 打包 TypeScript 代码
+      const result = await esbuild.build({
+        entryPoints: [CONFIG.entryFile],
+        bundle: true,
+        platform: 'browser',
+        format: 'iife',
+        target: ['es2020'],
+        write: false,
+        sourcemap: false,
+        minifyIdentifiers: false,
+        minifySyntax: false,
+        minifyWhitespace: false,
+        banner: { js: metadata },
+        logLevel: 'warning'
+      });
+      fs.writeFileSync(outputFile, result.outputFiles[0].text, 'utf-8');
+      console.log(`Build completed (esbuild): ${outputFile}`);
+      console.log(`Output size: ${(result.outputFiles[0].text.length / 1024).toFixed(2)} KB`);
+    } else {
+      // esbuild 缺失时回退到 tsc 编译（仅作构建产物验证，不入 header）
+      console.warn('esbuild 未安装，回退使用 tsc 编译验证...');
+      const { execSync } = require('child_process');
+      execSync('npx tsc --outDir build/tsc-out --module esnext --target es2020 --moduleResolution bundler', { stdio: 'inherit' });
+      const compiled = path.join('build', 'tsc-out', 'main.js');
+      if (!fs.existsSync(compiled)) {
+        throw new Error('tsc 编译产物缺失: ' + compiled);
+      }
+      const code = fs.readFileSync(compiled, 'utf-8');
+      fs.writeFileSync(outputFile, metadata + code, 'utf-8');
+      console.log(`Build completed (tsc fallback): ${outputFile}`);
+    }
   } catch (error) {
     console.error('Build failed:', error.message);
     if (error.errors) {

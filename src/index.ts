@@ -4,7 +4,8 @@
 // 本文件仅做 re-export，不在此处执行任何初始化或全局对象赋值，避免与 main.ts 冲突。
 
 export { default as UIManager } from './ui_manager';
-export { getConfig, saveConfig, updateConfig, defaultConfig, type AppConfig } from './config';
+export { getConfig, saveConfig, setConfig, updateConfig, defaultConfig, type Config } from './config';
+export type { AppConfig } from './types';
 export { default as ElementController, default as elementController } from './controllers/elementController';
 export { default as LayoutController, default as layoutController } from './controllers/layoutController';
 export { default as AutoTestController, default as autoTestController } from './controllers/autoTestController';

@@ -131,11 +131,31 @@ export function loadConfig(): Config {
   }
 }
 
+export const defaultConfig: Config = { ...DEFAULT_CONFIG };
+
 export function getConfig(): Config {
   if (!currentConfig) {
     loadConfig();
   }
   return { ...currentConfig! };
+}
+
+export function updateConfig(partial: Partial<Config>): boolean {
+  try {
+    if (!currentConfig) {
+      loadConfig();
+    }
+    currentConfig = mergeConfig(partial, currentConfig!);
+    currentConfig.version = CONFIG_VERSION;
+    saveConfig(currentConfig);
+    eventEmitter.emit('config.updated', { config: currentConfig });
+    logger.info('[抖音工具] 配置已更新');
+    return true;
+  } catch (error) {
+    logger.error('[抖音工具] 更新配置失败：', error);
+    eventEmitter.emit('config.error', { type: 'update', error });
+    return false;
+  }
 }
 
 export function setConfig(key: string | Partial<Config>, value?: unknown): boolean {
